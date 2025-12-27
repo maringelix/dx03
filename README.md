@@ -1,482 +1,776 @@
-# tx03 - Google Cloud Platform Infrastructure
+# 🚀 DX03 - Fullstack Application - 2025
 
+[![CI](https://github.com/maringelix/dx03/actions/workflows/ci.yml/badge.svg)](https://github.com/maringelix/dx03/actions/workflows/ci.yml)
+[![Deploy](https://github.com/maringelix/dx03/actions/workflows/deploy.yml/badge.svg)](https://github.com/maringelix/dx03/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Terraform](https://img.shields.io/badge/Terraform-1.9+-purple.svg)](https://www.terraform.io/)
-[![GCP](https://img.shields.io/badge/GCP-Cloud-blue.svg)](https://cloud.google.com/)
 
-> Infraestrutura como Código (IaC) para aplicação fullstack no Google Cloud Platform usando Terraform, GKE, Cloud SQL, Cloud Armor e GitHub Actions.
+Uma aplicação fullstack moderna com **React + TypeScript + Vite** no frontend e **Node.js + Express + PostgreSQL** no backend, pronta para deploy em **Google Cloud Platform (GKE)**.
+
+---
+
+## ⚠️ **Important Security Notice**
+
+> 🔒 **This is a demonstration/portfolio project for learning purposes.**
+
+**Security Best Practices:**
+
+- ⚠️ **DO NOT** hardcode database credentials or API keys in the code
+- ✅ Use environment variables (`.env` files) for local development
+- ✅ Use **Kubernetes Secrets** or **GitHub Secrets** for production
+- ✅ The `.env` file is in `.gitignore` and never committed
+- ✅ Use `.env.example` as a template (no real credentials)
+- ✅ Review and adjust CORS settings for your domain
+- ✅ Implement rate limiting and input validation in production
+- ✅ Enable HTTPS/TLS for all production traffic
+
+**Database Connection:**
+- Local: Uses environment variables from `.env` or Docker Compose
+- Production: Credentials injected via Kubernetes Secrets (from Cloud SQL)
+- No credentials are stored in the code or repository
+
+**This project is safe to share publicly** - All sensitive data is properly externalized.
+
+---
 
 ## 📋 Índice
 
-- [Sobre o Projeto](#sobre-o-projeto)
+- [Sobre](#sobre)
+- [Tecnologias](#tecnologias)
 - [Pré-requisitos](#pré-requisitos)
-- [Arquitetura](#arquitetura)
-- [Quick Start](#quick-start)
+- [Instalação](#instalação)
+- [Desenvolvimento](#desenvolvimento)
+- [Build e Deploy](#build-e-deploy)
 - [Estrutura do Projeto](#estrutura-do-projeto)
-- [Workflows CI/CD](#workflows-cicd)
-- [Custos Estimados](#custos-estimados)
-- [Documentação](#documentação)
-- [Troubleshooting](#troubleshooting)
-- [Contribuindo](#contribuindo)
-- [Licença](#licença)
+- [API Endpoints](#api-endpoints)
+- [Variáveis de Ambiente](#variáveis-de-ambiente)
+- [Docker](#docker)
+- [Kubernetes](#kubernetes)
+- [CI/CD](#cicd)
 
-## 🎯 Sobre o Projeto
+## 🎯 Sobre
 
-Este repositório contém a infraestrutura do **tx03**, o terceiro projeto da série de implementações multi-cloud:
+DX03 é uma aplicação fullstack completa que demonstra:
+- ✅ Frontend React com **TypeScript + Vite** para desenvolvimento ultra-rápido
+- ✅ Backend RESTful com **Express + PostgreSQL**
+- ✅ **Health check endpoints** para Kubernetes liveness/readiness probes
+- ✅ **Métricas e observabilidade** em tempo real
+- ✅ **CORS e segurança** configurados (Helmet, HTTPS)
+- ✅ **Hot reload** em desenvolvimento
+- ✅ **Multi-stage Docker builds** otimizados (<100MB)
+- ✅ **Kubernetes-ready** para deploy em GKE (Google Kubernetes Engine)
+- ✅ **CI/CD** automatizado com GitHub Actions
 
-- **tx01/dx01**: AWS (EKS, RDS, ALB, WAF)
-- **tx02/dx02**: Azure (AKS, Azure SQL, App Gateway)
-- **tx03/dx03**: GCP (GKE, Cloud SQL, Cloud Armor) ← **Você está aqui**
+## 🛠️ Tecnologias
 
-### Objetivos
+### Frontend
+- **React 18** - Biblioteca UI moderna
+- **TypeScript** - Type safety e IntelliSense
+- **Vite 5** - Build tool e dev server ultra-rápido (HMR instantâneo)
+- **CSS3** - Estilização responsiva
 
-- ✅ Provisionar infraestrutura GCP de forma automatizada
-- ✅ Utilizar Free Tier e $300 USD de créditos eficientemente
-- ✅ Implementar segurança com Cloud Armor (WAF)
-- ✅ GitOps com GitHub Actions e Workload Identity Federation
-- ✅ Observabilidade com Cloud Monitoring e Logging
-- ✅ Documentação completa e reprodutível
+### Backend
+- **Node.js 20** - Runtime JavaScript
+- **Express 4** - Framework web minimalista e rápido
+- **PostgreSQL 16** - Banco de dados relacional robusto
+- **pg** - Cliente PostgreSQL nativo (melhor performance)
+- **Helmet** - Security headers (XSS, clickjacking, etc)
+- **Morgan** - Logger HTTP para debugging
+- **CORS** - Cross-Origin Resource Sharing
+- **Compression** - Gzip para respostas HTTP
 
-## 🔧 Pré-requisitos
+### DevOps
+- **Docker** - Containerização com multi-stage builds
+- **Kubernetes** - Orquestração de containers
+- **GitHub Actions** - CI/CD pipelines automatizados
+- **Nginx** - Servidor web para frontend (produção)
+- **Nodemon** - Auto-reload no desenvolvimento
 
-### Ferramentas Necessárias
+## ⚙️ Pré-requisitos
 
+- **Node.js 20** ou superior
+- **npm 10** ou superior
+- **Docker Desktop** (para desenvolvimento local)
+- **Git**
+
+## 📦 Instalação
+
+### Clone o repositório
 ```bash
-# Terraform
-terraform --version  # >= 1.9.0
-
-# Google Cloud SDK
-gcloud --version     # >= 480.0.0
-
-# kubectl
-kubectl version      # >= 1.29.0
-
-# Git
-git --version        # >= 2.40.0
+git clone https://github.com/maringelix/dx03.git
+cd dx03
 ```
 
-### Conta GCP
-
-1. **Criar conta GCP**: https://console.cloud.google.com/
-2. **Ativar Free Trial**: $300 USD em créditos (90 dias)
-3. **Criar projeto**: `gcloud projects create tx03-prod --name="TX03 Production"`
-4. **Habilitar billing**: Vincular projeto à conta de billing
-
-### GitHub
-
-1. **Repositórios**:
-   - tx03 (infraestrutura): https://github.com/maringelix/tx03
-   - dx03 (aplicação): https://github.com/maringelix/dx03
-
-2. **Secrets necessários**:
-   - `GCP_PROJECT_ID`: ID do projeto GCP
-   - `GCP_PROJECT_NUMBER`: Número do projeto
-   - `WIF_PROVIDER`: Workload Identity Provider (configurado no bootstrap)
-   - `WIF_SERVICE_ACCOUNT`: Service Account email
-
-## 🏗️ Arquitetura
-
-### Diagrama de Alto Nível
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                       Internet                           │
-└────────────────────┬────────────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────────────┐
-│          Cloud Load Balancer (HTTPS/SSL)                │
-│              (External, Global)                          │
-└────────────────────┬────────────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────────────┐
-│         Cloud Armor (WAF + DDoS Protection)             │
-│   • XSS Protection                                       │
-│   • SQL Injection Protection                            │
-│   • Rate Limiting                                       │
-└────────────────────┬────────────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────────────┐
-│                    GKE Autopilot                         │
-│  ┌────────────────────────────────────────────────┐    │
-│  │   Ingress Controller (GKE Native)              │    │
-│  └────────────────┬───────────────────────────────┘    │
-│                   │                                      │
-│  ┌────────────────┼───────────────────────────────┐    │
-│  │  Pods (Managed by Autopilot)                   │    │
-│  │                │                                │    │
-│  │  ┌─────────────▼─────────────┐                 │    │
-│  │  │  Frontend (React)         │                 │    │
-│  │  │  • Nginx                  │                 │    │
-│  │  │  • Static Assets          │                 │    │
-│  │  └──────────────┬────────────┘                 │    │
-│  │                 │                               │    │
-│  │  ┌──────────────▼────────────┐                 │    │
-│  │  │  Backend (Node.js)        │                 │    │
-│  │  │  • Express API            │                 │    │
-│  │  │  • Business Logic         │                 │    │
-│  │  └──────────────┬────────────┘                 │    │
-│  └─────────────────┼────────────────────────────────┘  │
-└────────────────────┼────────────────────────────────────┘
-                     │
-                     │ Private IP (VPC Peering)
-                     ▼
-┌─────────────────────────────────────────────────────────┐
-│           Cloud SQL for PostgreSQL                       │
-│  • Version: 16                                           │
-│  • Instance: db-f1-micro (0.6GB RAM)                    │
-│  • High Availability: ZONAL                             │
-│  • Backups: Automated (Daily 3am UTC)                   │
-└─────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────┐
-│         Supporting Services                              │
-│  • Artifact Registry: Docker images                     │
-│  • Cloud Storage: Terraform state                       │
-│  • Cloud Logging: Centralized logs                      │
-│  • Cloud Monitoring: Metrics & Alerts                   │
-│  • Secret Manager: Credentials                          │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Componentes Principais
-
-| Componente | Tecnologia | Propósito |
-|-----------|-----------|----------|
-| **Kubernetes** | GKE Autopilot | Orquestração de containers |
-| **Database** | Cloud SQL PostgreSQL 16 | Banco de dados relacional |
-| **Container Registry** | Artifact Registry | Armazenamento de imagens Docker |
-| **WAF** | Cloud Armor | Proteção contra ataques web |
-| **Load Balancer** | Cloud Load Balancer | Distribuição de tráfego HTTPS |
-| **Networking** | VPC + Private Service Connect | Rede privada isolada |
-| **Observability** | Cloud Monitoring + Logging | Monitoramento e logs |
-| **IaC** | Terraform | Infraestrutura como código |
-| **CI/CD** | GitHub Actions | Automação de deploy |
-
-## 🚀 Quick Start
-
-### 1. Clone o Repositório
-
+### Opção 1: Docker Compose (⭐ Recomendado)
 ```bash
-git clone https://github.com/maringelix/tx03.git
-cd tx03
+# Inicia todos os serviços (frontend + backend + PostgreSQL)
+docker-compose up -d
+
+# Ver logs em tempo real
+docker-compose logs -f
+
+# Parar todos os serviços
+docker-compose down
 ```
 
-### 2. Configure Credenciais GCP
+### Opção 2: Instalação Manual
 
+**1. Instale as dependências:**
 ```bash
-# Login
-gcloud auth login
-gcloud auth application-default login
+# Backend
+cd server
+npm install
 
-# Set project
-gcloud config set project YOUR_PROJECT_ID
-
-# Habilitar APIs necessárias
-gcloud services enable \
-  container.googleapis.com \
-  compute.googleapis.com \
-  sqladmin.googleapis.com \
-  artifactregistry.googleapis.com \
-  cloudresourcemanager.googleapis.com \
-  servicenetworking.googleapis.com \
-  iam.googleapis.com \
-  iamcredentials.googleapis.com \
-  sts.googleapis.com
+# Frontend  
+cd ../client
+npm install
 ```
 
-### 3. Bootstrap do Terraform Backend
-
+**2. Configure o banco de dados:**
 ```bash
-cd terraform/bootstrap
+# Opção A: PostgreSQL com Docker
+docker run -d \
+  --name dx03-postgres \
+  -e POSTGRES_DB=dx03 \
+  -e POSTGRES_USER=admin \
+  -e POSTGRES_PASSWORD=admin123 \
+  -p 5432:5432 \
+  postgres:16-alpine
 
-# Inicializar
-terraform init
-
-# Planejar
-terraform plan -out=tfplan
-
-# Aplicar
-terraform apply tfplan
+# Opção B: Use sua instalação local do PostgreSQL
+# Configure as credenciais no .env
 ```
 
-### 4. Configurar Workload Identity Federation
-
-Siga o guia: [WORKLOAD_IDENTITY_SETUP.md](docs/WORKLOAD_IDENTITY_SETUP.md)
-
-### 5. Deploy da Infraestrutura
-
-#### Via GitHub Actions (Recomendado)
+**3. Configure variáveis de ambiente:**
 ```bash
-# Push para main branch
-git add .
-git commit -m "feat: initial infrastructure"
-git push origin main
-
-# Workflow .github/workflows/terraform-apply.yml será executado
+# Backend
+cd server
+cp .env.example .env
+# Edite .env com suas credenciais do PostgreSQL
 ```
 
-#### Via Local (Desenvolvimento)
+## 🚀 Desenvolvimento
+
+### Com Docker Compose (Mais Fácil)
 ```bash
-cd terraform/environments/dev
-
-# Inicializar com backend remoto
-terraform init \
-  -backend-config="bucket=YOUR_BUCKET_NAME" \
-  -backend-config="prefix=terraform/state"
-
-# Planejar mudanças
-terraform plan -var-file="dev.tfvars"
-
-# Aplicar infraestrutura
-terraform apply -var-file="dev.tfvars"
+docker-compose up
 ```
 
-### 6. Acessar o Cluster
+Acesse:
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:3000
+- **Health Check**: http://localhost:3000/health
 
+### Manualmente (Desenvolvimento Nativo)
+
+**Terminal 1 - Backend:**
 ```bash
-# Get credentials
-gcloud container clusters get-credentials tx03-gke \
-  --region us-central1
+cd server
+npm run dev
+# Roda em http://localhost:3000
+# Auto-reload com nodemon
+```
 
-# Verificar nodes
-kubectl get nodes
-
-# Verificar pods
-kubectl get pods -A
+**Terminal 2 - Frontend:**
+```bash
+cd client
+npm run dev
+# Roda em http://localhost:5173
+# Hot Module Replacement (HMR)
 ```
 
 ## 📁 Estrutura do Projeto
 
 ```
-tx03/
-├── .github/
-│   └── workflows/
-│       ├── bootstrap.yml              # Setup Terraform backend
-│       ├── terraform-apply.yml        # Deploy infra (main)
-│       ├── terraform-plan.yml         # Plan on PR
-│       └── destroy.yml                # Destroy resources
+dx03/
+├── client/                       # Frontend React + TypeScript
+│   ├── src/
+│   │   ├── App.tsx              # Componente principal (Dashboard)
+│   │   ├── App.css              # Estilos do app
+│   │   ├── main.tsx             # Entry point React
+│   │   └── index.css            # Estilos globais
+│   ├── index.html               # HTML template
+│   ├── vite.config.ts           # Configuração Vite
+│   ├── tsconfig.json            # TypeScript config
+│   ├── nginx.conf               # Nginx para produção
+│   ├── Dockerfile               # Multi-stage build
+│   └── package.json             # Dependências frontend
 │
-├── terraform/
-│   ├── bootstrap/                     # Terraform backend setup
-│   │   ├── main.tf
-│   │   ├── outputs.tf
-│   │   └── variables.tf
-│   │
-│   ├── modules/
-│   │   ├── gke/                       # GKE Autopilot module
-│   │   ├── cloudsql/                  # Cloud SQL module
-│   │   ├── networking/                # VPC, Subnets, Firewall
-│   │   ├── artifact-registry/         # Container registry
-│   │   ├── load-balancer/             # LB + Cloud Armor
-│   │   └── iam/                       # Service accounts & roles
-│   │
-│   └── environments/
-│       ├── dev/
-│       │   ├── main.tf
-│       │   ├── backend.tf
-│       │   ├── providers.tf
-│       │   ├── variables.tf
-│       │   └── dev.tfvars
-│       └── prod/
-│           └── (similar structure)
+├── server/                       # Backend Node.js + Express
+│   ├── src/
+│   │   ├── config/
+│   │   │   └── index.js         # Configurações (env vars)
+│   │   ├── routes/
+│   │   │   ├── health.js        # Health check endpoints
+│   │   │   └── api.js           # API routes (metrics, etc)
+│   │   ├── database.js          # PostgreSQL connection pool
+│   │   └── server.js            # Entry point servidor
+│   ├── .env.example             # Template de variáveis
+│   ├── Dockerfile               # Container backend
+│   └── package.json             # Dependências backend
 │
-├── k8s/                               # Kubernetes manifests
-│   ├── base/                          # Kustomize base
-│   │   ├── namespace.yaml
-│   │   ├── configmap.yaml
-│   │   └── secrets.yaml
-│   └── overlays/
-│       ├── dev/
-│       └── prod/
+├── k8s/                          # Kubernetes manifests
+│   ├── namespace.yaml           # Namespace isolado
+│   ├── configmap.yaml           # Configs não-sensíveis
+│   ├── backend-deployment.yaml  # Deployment backend (2 replicas)
+│   ├── backend-service.yaml     # Service backend (ClusterIP)
+│   ├── frontend-deployment.yaml # Deployment frontend (2 replicas)
+│   ├── frontend-service.yaml    # Service frontend (ClusterIP)
+│   └── ingress.yaml             # Load Balancer + routing
 │
-├── docs/
-│   ├── ARCHITECTURE.md                # Arquitetura detalhada ✅
-│   ├── DEPLOYMENT_GUIDE.md            # Guia de deploy
-│   ├── WORKLOAD_IDENTITY_SETUP.md     # Setup WIF
-│   ├── TROUBLESHOOTING.md             # Solução de problemas
-│   ├── SECURITY.md                    # Práticas de segurança
-│   └── COST_OPTIMIZATION.md           # Otimização de custos
+├── .github/workflows/            # CI/CD
+│   ├── ci.yml                   # Lint, test, build
+│   └── deploy.yml               # Deploy to GKE
 │
-├── scripts/
-│   ├── setup-wif.sh                   # Configurar WIF
-│   ├── enable-apis.sh                 # Habilitar GCP APIs
-│   └── cleanup.sh                     # Limpeza de recursos
-│
-├── .gitignore
-├── README.md                          # Você está aqui ✅
-└── LICENSE
+├── docker-compose.yml           # Desenvolvimento local
+├── README.md                    # Este arquivo
+└── LICENSE                      # MIT License
 ```
 
-## ⚙️ Workflows CI/CD
+## 🔌 API Endpoints
 
-### 1. Bootstrap Workflow
+### Health Checks (Kubernetes Probes)
 
-**Trigger**: Manual (`workflow_dispatch`)  
-**Arquivo**: `.github/workflows/bootstrap.yml`
+**GET** `/health` - Status completo da aplicação
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-12-26T12:00:00.000Z",
+  "uptime": 3645.23,
+  "environment": "production",
+  "database": {
+    "status": "connected",
+    "latency": "5ms",
+    "connections": {
+      "total_connections": "10",
+      "active_connections": "2"
+    }
+  },
+  "memory": {
+    "used": "50MB",
+    "total": "128MB"
+  },
+  "responseTime": "10ms"
+}
+```
 
+**GET** `/health/ready` - Readiness probe (verifica database)
+```json
+{ "status": "ready" }
+```
+
+**GET** `/health/live` - Liveness probe (verifica processo Node.js)
+```json
+{ "status": "alive" }
+```
+
+### API Routes
+
+**GET** `/api/metrics` - Métricas da aplicação (última 1 hora)
+```json
+{
+  "metrics": [
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "avg_response_time": 5.2,
+      "request_count": 1234,
+      "error_count": 0
+    },
+    {
+      "endpoint": "/api/test",
+      "method": "GET",
+      "avg_response_time": 12.5,
+      "request_count": 567,
+      "error_count": 3
+    }
+  ],
+  "period": "1 hour"
+}
+```
+
+**GET** `/api/health-history` - Histórico de health checks (últimos 100)
+```json
+{
+  "history": [
+    {
+      "timestamp": "2025-12-26T12:00:00Z",
+      "status": "healthy",
+      "details": { /* full health object */ }
+    },
+    // ... mais 99 registros
+  ]
+}
+```
+
+**GET** `/api/test` - Endpoint de teste simples
+```json
+{
+  "message": "API is working!",
+  "timestamp": "2025-12-26T12:00:00Z"
+}
+```
+
+**POST** `/api/echo` - Echo request body (útil para debug)
+```bash
+curl -X POST http://localhost:3000/api/echo \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello World"}'
+```
+```json
+{
+  "received": {
+    "message": "Hello World"
+  },
+  "timestamp": "2025-12-26T12:00:00Z"
+}
+```
+
+## 🔐 Variáveis de Ambiente
+
+### Backend (`.env`)
+
+```env
+# Node Environment
+NODE_ENV=development          # development | production
+PORT=3000                     # Porta do servidor
+
+# Database PostgreSQL
+DB_HOST=localhost             # Hostname do banco
+DB_PORT=5432                  # Porta PostgreSQL padrão
+DB_NAME=dx03                  # Nome do banco de dados
+DB_USER=admin                 # Usuário do banco
+DB_PASSWORD=admin123          # Senha (use algo forte em prod!)
+
+# CORS Configuration
+CORS_ORIGIN=http://localhost:5173  # URL do frontend (dev)
+# Em produção: CORS_ORIGIN=https://app.example.com
+
+# Logging
+LOG_LEVEL=info                # debug | info | warn | error
+```
+
+### Frontend (build-time)
+
+Configurado em `client/vite.config.ts`:
+```env
+VITE_API_URL=http://localhost:3000  # Backend API URL
+```
+
+**Produção (Kubernetes):**
+As variáveis são injetadas via **ConfigMaps** (não-sensíveis) e **Secrets** (sensíveis).
+Ver arquivos em `k8s/configmap.yaml` e comandos no workflow `deploy.yml`.
+
+## 📦 Build e Deploy
+
+### Build do Frontend
+```bash
+cd client
+npm run build
+# Cria pasta dist/ com assets otimizados (~150KB gzipped)
+```
+
+### Build do Backend
+```bash
+cd server
+npm start
+# Roda em modo produção (NODE_ENV=production, sem nodemon)
+```
+
+### Docker Build Local
+
+**Frontend:**
+```bash
+cd client
+docker build -t dx03-frontend:local .
+docker run -p 8080:80 dx03-frontend:local
+# Acesse: http://localhost:8080
+```
+
+**Backend:**
+```bash
+cd server
+docker build -t dx03-backend:local .
+docker run -p 3000:3000 --env-file .env dx03-backend:local
+# Acesse: http://localhost:3000/health
+```
+
+### Deploy para GKE (Produção)
+
+O deploy é **totalmente automatizado** via GitHub Actions quando você faz push na branch `main`:
+
+1. ✅ Build das imagens Docker (frontend + backend)
+2. ✅ Push para **Google Artifact Registry**
+3. ✅ Security scan das imagens (gcloud)
+4. ✅ Deploy no GKE usando `kubectl apply`
+5. ✅ Wait for rollout
+6. ✅ Health checks
+7. ✅ Deploy summary com IPs e URLs
+
+**Deploy manual (caso necessário):**
+```bash
+# 1. Autenticar no GCP
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID
+
+# 2. Get GKE credentials
+gcloud container clusters get-credentials tx03-dev-cluster --region us-central1
+
+# 3. Apply Kubernetes manifests
+kubectl apply -f k8s/
+
+# 4. Verificar status
+kubectl get pods -n dx03-dev
+kubectl get services -n dx03-dev
+kubectl get ingress -n dx03-dev
+```
+
+## 🐳 Docker
+
+### Docker Compose (Desenvolvimento)
+
+O `docker-compose.yml` configura **3 serviços interconectados**:
+
+1. **postgres** - PostgreSQL 16-alpine (database)
+2. **backend** - Node.js API (depende do postgres)
+3. **frontend** - React + Nginx (depende do backend)
+
+```bash
+# Iniciar tudo
+docker-compose up -d
+
+# Ver logs de um serviço específico
+docker-compose logs -f backend
+docker-compose logs -f frontend
+docker-compose logs -f postgres
+
+# Parar tudo
+docker-compose down
+
+# Remover volumes (limpar banco de dados completamente)
+docker-compose down -v
+
+# Rebuild das imagens (após mudanças no código)
+docker-compose up -d --build
+```
+
+### Multi-stage Builds
+
+**Frontend:** `client/Dockerfile`
+- **Stage 1 (builder)**: Build com Node.js 20 (npm ci + vite build)
+- **Stage 2 (production)**: Serve com Nginx Alpine (~**50MB final**)
+- Otimizações: Cache de npm, apenas dist/ copiado
+
+**Backend:** `server/Dockerfile`
+- Build otimizado com `npm ci --production`
+- Imagem final: **Node 20 Alpine** (~150MB)
+- **Health check integrado** no Dockerfile
+- **Non-root user** (node) para segurança
+
+## ☸️ Kubernetes
+
+### Manifests Explicados
+
+O diretório `k8s/` contém **7 arquivos YAML**:
+
+**1. namespace.yaml** - Namespace isolado `dx03-dev`
 ```yaml
-# Cria:
-# - GCS bucket para Terraform state
-# - Workload Identity Pool & Provider
-# - Service Account para GitHub Actions
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dx03-dev
 ```
 
-**Uso**:
-```bash
-# Via GitHub UI: Actions → Bootstrap → Run workflow
+**2. configmap.yaml** - Configurações não-sensíveis
+```yaml
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  DB_PORT: "5432"
+  CORS_ORIGIN: "https://app.example.com"
 ```
 
-### 2. Terraform Plan (PR)
+**3. backend-deployment.yaml** - Deployment do backend
+- **2 replicas** para alta disponibilidade
+- Liveness/Readiness probes em `/health/live` e `/health/ready`
+- Resource limits (CPU: 500m, Memory: 512Mi)
+- Secrets para credenciais do banco
 
-**Trigger**: Pull Request  
-**Arquivo**: `.github/workflows/terraform-plan.yml`
+**4. backend-service.yaml** - Service ClusterIP
+- Expõe o backend internamente na porta 80
 
-- Executa `terraform plan`
-- Comenta resultado no PR
-- Valida sintaxe e formatação
+**5. frontend-deployment.yaml** - Deployment do frontend
+- **2 replicas** para alta disponibilidade
+- Health probes em `/health`
+- Resource limits (CPU: 200m, Memory: 256Mi)
 
-### 3. Terraform Apply (Deploy)
+**6. frontend-service.yaml** - Service ClusterIP
+- Expõe o frontend internamente na porta 80
 
-**Trigger**: Push to `main`  
-**Arquivo**: `.github/workflows/terraform-apply.yml`
+**7. ingress.yaml** - Load Balancer + routing
+- Path-based routing: `/api/*` → backend, `/*` → frontend
+- Cloud Armor security policy
+- Static IP reservado
 
-- Executa `terraform apply -auto-approve`
-- Deploy completo da infraestrutura
-- Atualiza outputs no PR
-
-### 4. Destroy Workflow
-
-**Trigger**: Manual  
-**Arquivo**: `.github/workflows/destroy.yml`
-
-- Destrói recursos GCP
-- Preserva Terraform backend (opcional)
-- Requer confirmação "destroy"
-
-## 💰 Custos Estimados
-
-### Breakdown Mensal (DEV)
-
-| Recurso | Configuração | Custo/Mês (USD) |
-|---------|-------------|-----------------|
-| **GKE Autopilot** | 1 cluster, workload pequeno | $10-15 |
-| **Cloud SQL** | db-f1-micro (0.6GB RAM) | $10-15 |
-| **Artifact Registry** | ~5GB imagens | $1-2 |
-| **Cloud Armor** | WAF + 5 regras | $7-10 |
-| **Load Balancer** | External HTTPS LB | $20-25 |
-| **Cloud Storage** | < 5GB (Free Tier) | $0 |
-| **Monitoring/Logging** | Basic usage | $5-10 |
-| **Networking** | Egress (moderado) | $5-10 |
-| **TOTAL** | | **$58-87** |
-
-### Duração dos Créditos
-
-- **Créditos GCP**: $300 USD
-- **Consumo mensal**: ~$70 USD
-- **Duração**: ~4 meses
-
-### Otimizações
-
-Para reduzir custos:
-
-1. **Desabilitar Cloud Armor** em DEV: -$10/mês
-2. **Usar Preemptible instances** (GKE Standard): -40%
-3. **Reduzir retention de logs**: -30%
-4. **Desligar infra fora do horário comercial**: -50%
-
-Ver mais: [COST_OPTIMIZATION.md](docs/COST_OPTIMIZATION.md)
-
-## 📚 Documentação
-
-### Guias
-
-- [Arquitetura Detalhada](docs/ARCHITECTURE.md) ✅
-- [Guia de Deploy](docs/DEPLOYMENT_GUIDE.md)
-- [Setup Workload Identity](docs/WORKLOAD_IDENTITY_SETUP.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Práticas de Segurança](docs/SECURITY.md)
-- [Otimização de Custos](docs/COST_OPTIMIZATION.md)
-
-### Links Úteis
-
-- [Terraform Google Provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
-- [GKE Documentation](https://cloud.google.com/kubernetes-engine/docs)
-- [Cloud SQL for PostgreSQL](https://cloud.google.com/sql/docs/postgres)
-- [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation)
-
-### Projetos Relacionados
-
-- [dx03 - Aplicação](https://github.com/maringelix/dx03): Frontend React + Backend Node.js
-- [tx01 - AWS Infrastructure](https://github.com/maringelix/tx01)
-- [tx02 - Azure Infrastructure](https://github.com/maringelix/tx02)
-
-## 🐛 Troubleshooting
-
-### Problema: "API not enabled"
+### Deploy Manual em Kubernetes
 
 ```bash
-# Habilitar APIs necessárias
-./scripts/enable-apis.sh
+# Apply all manifests de uma vez
+kubectl apply -f k8s/
+
+# Check status dos pods
+kubectl get pods -n dx03-dev
+# NAME                            READY   STATUS    RESTARTS   AGE
+# dx03-backend-7d9f8c5b6d-abc12   1/1     Running   0          2m
+# dx03-backend-7d9f8c5b6d-def34   1/1     Running   0          2m
+# dx03-frontend-5c8d7b9a4f-ghi56  1/1     Running   0          2m
+# dx03-frontend-5c8d7b9a4f-jkl78  1/1     Running   0          2m
+
+# Check services
+kubectl get services -n dx03-dev
+
+# Check ingress (Load Balancer IP)
+kubectl get ingress -n dx03-dev
+# NAME           CLASS    HOSTS   ADDRESS          PORTS   AGE
+# dx03-ingress   <none>   *       34.120.45.123    80      5m
+
+# View logs em tempo real
+kubectl logs -f deployment/dx03-backend -n dx03-dev
+kubectl logs -f deployment/dx03-frontend -n dx03-dev
+
+# Scale deployment (aumentar/diminuir replicas)
+kubectl scale deployment/dx03-backend --replicas=3 -n dx03-dev
+
+# Port forward para testar localmente (sem passar pelo LB)
+kubectl port-forward svc/dx03-backend 3000:80 -n dx03-dev
+kubectl port-forward svc/dx03-frontend 8080:80 -n dx03-dev
+
+# Restart deployment (força rolling update)
+kubectl rollout restart deployment/dx03-backend -n dx03-dev
+
+# Check rollout status
+kubectl rollout status deployment/dx03-backend -n dx03-dev
 ```
 
-### Problema: "Permission denied" no Terraform
+### Health Probes (Kubernetes)
+
+**Liveness Probe** - Verifica se o processo está vivo (restart se falhar 3x):
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: 3000
+  initialDelaySeconds: 30    # Espera 30s antes do primeiro check
+  periodSeconds: 10          # Check a cada 10s
+  timeoutSeconds: 5          # Timeout de 5s
+  failureThreshold: 3        # Restart após 3 falhas consecutivas
+```
+
+**Readiness Probe** - Verifica se está pronto para receber tráfego (remove do Service se falhar):
+```yaml
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 3000
+  initialDelaySeconds: 10    # Primeiro check em 10s
+  periodSeconds: 5           # Check a cada 5s
+  timeoutSeconds: 3          # Timeout de 3s
+  failureThreshold: 3        # Remove do balanceamento após 3 falhas
+```
+
+## 📊 Observabilidade
+
+### Métricas Disponíveis
+
+A aplicação expõe métricas detalhadas em **`/api/metrics`**:
+- Endpoints mais chamados (top 10)
+- Tempo médio de resposta (ms)
+- Taxa de erros (4xx, 5xx)
+- Contagem total de requisições
+- Período: última 1 hora
+
+**Exemplo de uso:**
+```bash
+# Ver métricas em tempo real
+watch -n 5 'curl -s http://localhost:3000/api/metrics | jq ".metrics[:3]"'
+```
+
+### Logs Estruturados
+
+O backend usa **Morgan** para logging HTTP detalhado:
+```
+GET /health 200 5.234ms
+POST /api/echo 200 12.567ms - 45 bytes
+GET /api/metrics 200 8.123ms
+GET /health/live 200 1.234ms
+```
+
+Formato em produção (combinado):
+```
+::1 - - [26/Dec/2025:12:00:00 +0000] "GET /health HTTP/1.1" 200 523 "-" "Mozilla/5.0"
+```
+
+### Health Dashboard (Frontend)
+
+O frontend exibe um **dashboard em tempo real** com:
+- ✅ Status geral da aplicação (healthy/unhealthy)
+- ⏱️ Uptime do servidor (formatado)
+- 🗄️ Status do banco de dados (connected/disconnected)
+- 📊 Latência da conexão PostgreSQL
+- 💾 Uso de memória (heap used/total)
+- 🔄 Auto-refresh a cada 10 segundos
+- ⚡ Response time do último health check
+
+## 🚀 CI/CD
+
+### GitHub Actions Workflows
+
+**✅ CI (`ci.yml`)** - Executa em **todo push e PR**:
+1. Lint e type checking (TypeScript + ESLint)
+2. Build do frontend (vite build)
+3. Tests do backend (Jest) - opcional por enquanto
+4. **Docker build test** (valida Dockerfiles sem push)
+5. Matrix strategy (frontend + backend em paralelo)
+
+**🚢 Deploy (`deploy.yml`)** - Executa em **push na `main`**:
+1. **Build** das imagens Docker (frontend + backend)
+2. **Push** para Google Artifact Registry
+3. **Security scanning** (gcloud artifacts scan)
+4. **Deploy** no GKE com kubectl apply
+5. **Wait for rollout** (timeout 5min)
+6. **Health checks** automáticos
+7. **Deployment summary** com IPs, URLs e métricas
+
+### Secrets Necessários (GitHub)
+
+Configure em **Settings > Secrets and variables > Actions**:
+```
+WIF_PROVIDER           # projects/123/locations/global/workloadIdentityPools/...
+WIF_SERVICE_ACCOUNT    # github-actions@project.iam.gserviceaccount.com
+GCP_PROJECT_ID         # your-gcp-project-id
+DB_HOST                # 10.X.X.X (Cloud SQL private IP)
+DB_NAME                # dx03
+DB_USER                # postgres
+DB_PASSWORD            # strong-password-here
+```
+
+**Como obter os valores:**
+- `WIF_PROVIDER` e `WIF_SERVICE_ACCOUNT`: Ver [WORKLOAD_IDENTITY_SETUP.md](docs/WORKLOAD_IDENTITY_SETUP.md) no repo tx03
+- `DB_HOST`: IP privado do Cloud SQL (console GCP)
+- `DB_*`: Credenciais do Cloud SQL
+
+## 🧪 Testing
 
 ```bash
-# Verificar IAM roles
-gcloud projects get-iam-policy YOUR_PROJECT_ID \
-  --flatten="bindings[].members" \
-  --filter="bindings.members:serviceAccount:github-actions-sa@*"
+# Backend tests (Jest) - quando implementados
+cd server
+npm test                    # Run all tests
+npm run test:watch         # Watch mode
+npm run test:coverage      # Coverage report
+
+# Frontend tests (Vitest) - quando implementados
+cd client
+npm test                    # Run all tests
+npm run test:watch         # Watch mode
+npm run test:coverage      # Coverage report
 ```
 
-### Problema: GKE Autopilot cluster creation timeout
+**Status atual:** Estrutura pronta para testes, implementação futura.
 
-- Timeout normal: 15-20 minutos
-- Se > 30 min: Verificar quotas do projeto
-- Consultar: [GKE Troubleshooting](https://cloud.google.com/kubernetes-engine/docs/troubleshooting)
+## 📈 Performance
 
-### Mais problemas?
+### Métricas de Build
+- **Frontend Build Time**: ~15-30s (Vite)
+- **Frontend Bundle Size**: ~150KB gzipped
+- **Backend Start Time**: ~2-3s (com DB connection)
 
-Consulte: [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+### Métricas de Runtime
+- **Backend Response Time**: < 100ms (média)
+- **Database Query Latency**: < 10ms (Cloud SQL)
+- **Frontend Load Time**: < 2s (FCP - First Contentful Paint)
+
+### Docker Images
+- **Frontend**: ~50MB (Nginx Alpine)
+- **Backend**: ~150MB (Node 20 Alpine)
+- **PostgreSQL**: ~240MB (official alpine)
+
+### Kubernetes Resources
+**Backend Pod:**
+- Requests: CPU 100m, Memory 128Mi
+- Limits: CPU 500m, Memory 512Mi
+
+**Frontend Pod:**
+- Requests: CPU 50m, Memory 64Mi
+- Limits: CPU 200m, Memory 256Mi
+
+## 🔗 Projetos Relacionados
+
+### Infraestrutura (Terraform)
+- **tx03**: https://github.com/maringelix/tx03
+  - Terraform modules para GCP
+  - GKE cluster (Autopilot ou Standard)
+  - Cloud SQL PostgreSQL (db-f1-micro)
+  - Networking (VPC, subnets, NAT)
+  - Cloud Armor (WAF policies)
+  - Artifact Registry
+  - Workload Identity Federation
+
+### Outras Aplicações da Série
+- **dx01**: https://github.com/maringelix/dx01 (AWS/EKS)
+  - React + Node.js em EKS
+  - RDS PostgreSQL
+  - ALB + WAF
+  
+- **dx02**: https://github.com/maringelix/dx02 (Azure/AKS)
+  - React + Node.js em AKS
+  - Azure SQL Database
+  - Application Gateway
 
 ## 🤝 Contribuindo
 
 Contribuições são bem-vindas! Por favor:
 
-1. Fork o projeto
-2. Crie uma branch (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'feat: add AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
+1. **Fork** o projeto
+2. Crie uma **feature branch** (`git checkout -b feature/MinhaFeature`)
+3. **Commit** suas mudanças (`git commit -m 'Add: Minha feature incrível'`)
+4. **Push** para a branch (`git push origin feature/MinhaFeature`)
+5. Abra um **Pull Request** com descrição detalhada
 
-### Convenções
+### Guidelines
+- Siga os padrões de código existentes (ESLint, Prettier)
+- Adicione testes quando relevante
+- Atualize a documentação se necessário
+- Use commits semânticos (feat, fix, docs, etc)
 
-- Commits: [Conventional Commits](https://www.conventionalcommits.org/)
-- Terraform: [Style Guide](https://www.terraform.io/docs/language/syntax/style.html)
-- Documentação: Markdown com links relativos
+## 📝 Licença
 
-## 📄 Licença
+Este projeto está licenciado sob a **MIT License** - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
-Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhes.
+**Resumo da Licença MIT:**
+- ✅ Uso comercial e privado permitido
+- ✅ Modificação permitida
+- ✅ Distribuição permitida
+- ⚠️ Sem garantias (use por sua conta e risco)
+- 📝 Mantenha o aviso de copyright
 
 ## 👤 Autor
 
 **maringelix**
-
 - GitHub: [@maringelix](https://github.com/maringelix)
-- LinkedIn: [maringelix](https://linkedin.com/in/maringelix)
+- DX03 App: https://github.com/maringelix/dx03
+- TX03 Infrastructure: https://github.com/maringelix/tx03
 
 ## 🙏 Agradecimentos
 
-- HashiCorp Terraform
-- Google Cloud Platform
-- GitHub Actions
-- Comunidade Open Source
+- [Google Cloud Platform](https://cloud.google.com/) - Infraestrutura e documentação
+- [React](https://react.dev/) e [Vite](https://vitejs.dev/) - Ferramentas frontend incríveis
+- [Node.js](https://nodejs.org/) e [Express](https://expressjs.com/) - Backend robusto
+- [PostgreSQL](https://www.postgresql.org/) - Banco de dados confiável
+- [Kubernetes](https://kubernetes.io/) - Orquestração de containers
+- [Docker](https://www.docker.com/) - Containerização
+- Comunidade open-source - Por todo o conhecimento compartilhado
 
 ---
 
-**Status do Projeto**: 🚧 Em Desenvolvimento  
-**Última Atualização**: 2025-01-01  
-**Versão**: 0.1.0
+**Desenvolvido com ❤️ para fins de aprendizado e demonstração**
+
+*Parte da série de projetos multi-cloud: AWS (tx01/dx01), Azure (tx02/dx02), GCP (tx03/dx03)*
