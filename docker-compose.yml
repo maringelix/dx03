@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dx03-postgres
+    environment:
+      POSTGRES_DB: dx03
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d dx03"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dx03-network
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: dx03-backend
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: dx03
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      CORS_ORIGIN: http://localhost:5173
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./server/src:/app/src
+    networks:
+      - dx03-network
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000
+    container_name: dx03-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - dx03-network
+
+volumes:
+  postgres_data:
+
+networks:
+  dx03-network:
+    driver: bridge

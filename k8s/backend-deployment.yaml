@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dx03-backend
+  namespace: dx03-ENVIRONMENT_PLACEHOLDER
+  labels:
+    app: dx03-backend
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dx03-backend
+  template:
+    metadata:
+      labels:
+        app: dx03-backend
+        version: v1
+    spec:
+      containers:
+      - name: backend
+        image: IMAGE_PLACEHOLDER
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: dx03-config
+              key: NODE_ENV
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: dx03-config
+              key: PORT
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: dx03-db-secret
+              key: host
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: dx03-db-secret
+              key: port
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: dx03-db-secret
+              key: database
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: dx03-db-secret
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: dx03-db-secret
+              key: password
+        - name: CORS_ORIGIN
+          valueFrom:
+            configMapKeyRef:
+              name: dx03-config
+              key: CORS_ORIGIN
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3

@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dx03-ingress
+  namespace: dx03-ENVIRONMENT_PLACEHOLDER
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "dx03-ip"
+    networking.gke.io/managed-certificates: "dx03-cert"
+    # Cloud Armor security policy
+    cloud.google.com/armor-config: '{"dx03-security-policy": "global"}'
+  labels:
+    app: dx03
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /api/*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: dx03-backend
+            port:
+              number: 80
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: dx03-frontend
+            port:
+              number: 80
