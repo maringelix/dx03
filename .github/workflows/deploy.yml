@@ -189,6 +189,11 @@ jobs:
           kubectl get pods -n ${{ env.NAMESPACE }}
           kubectl describe deployment dx03-backend -n ${{ env.NAMESPACE }} | tail -20
           
+          # Show pod details if still pending
+          echo "🔍 Checking pod events..."
+          kubectl get events -n ${{ env.NAMESPACE }} --sort-by='.lastTimestamp' | tail -20
+          kubectl describe pods -n ${{ env.NAMESPACE }} -l app=dx03-backend | grep -A 10 "Events:"
+          
           kubectl rollout status deployment/dx03-backend -n ${{ env.NAMESPACE }} --timeout=10m
           
           echo "✅ Backend deployed successfully!"
