@@ -21,6 +21,9 @@ tfplan
 .gcloud/
 *.json
 !*example*.json
+!package.json
+!package-lock.json
+!tsconfig*.json
 credentials.json
 service-account-key.json
 
