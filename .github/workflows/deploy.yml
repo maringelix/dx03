@@ -40,13 +40,6 @@ jobs:
         with:
           path: app
 
-      - name: Checkout tx03 (for Terraform outputs)
-        uses: actions/checkout@v4
-        with:
-          repository: maringelix/tx03
-          path: tx03
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -112,26 +105,12 @@ jobs:
         with:
           terraform_version: 1.9.0
 
-      - name: Get Database Credentials from Terraform
+      - name: Get Database Credentials
         id: db_creds
-        working-directory: tx03/terraform/environments/dev
         run: |
-          echo "🔍 Getting database credentials from Terraform..."
-          
-          # Initialize Terraform to access outputs
-          terraform init \
-            -backend-config="bucket=${{ secrets.GCS_BUCKET }}" \
-            -backend-config="prefix=terraform/state/dev"
-          
-          # Get database password
-          DB_PASSWORD=$(terraform output -raw database_password)
-          echo "::add-mask::$DB_PASSWORD"
-          echo "db_password=$DB_PASSWORD" >> $GITHUB_OUTPUT
-          
-          # Get Cloud SQL private IP
-          DB_HOST=$(terraform output -raw cloudsql_private_ip)
-          echo "db_host=$DB_HOST" >> $GITHUB_OUTPUT
-          
+          echo "🔍 Using database credentials from secrets..."
+          echo "db_password=${{ secrets.DB_PASSWORD }}" >> $GITHUB_OUTPUT
+          echo "db_host=${{ secrets.DB_HOST }}" >> $GITHUB_OUTPUT
           echo "✅ Database credentials retrieved"
 
       - name: Create Kubernetes Namespace
