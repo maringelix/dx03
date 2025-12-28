@@ -37,6 +37,8 @@ jobs:
     steps:
       - name: Checkout dx03
         uses: actions/checkout@v4
+        with:
+          path: app
 
       - name: Checkout tx03 (for Terraform outputs)
         uses: actions/checkout@v4
@@ -70,7 +72,7 @@ jobs:
             --project ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Build and Push Frontend
-        working-directory: client
+        working-directory: app/client
         run: |
           echo "🏗️ Building frontend image..."
           echo "📂 Current directory: $(pwd)"
@@ -90,7 +92,7 @@ jobs:
           echo "✅ Frontend image pushed successfully!"
 
       - name: Build and Push Backend
-        working-directory: server
+        working-directory: app/server
         run: |
           echo "🏗️ Building backend image..."
           
@@ -155,7 +157,7 @@ jobs:
           echo "✅ Database secret created"
 
       - name: Apply ConfigMap
-        working-directory: dx03
+        working-directory: app
         run: |
           echo "⚙️ Applying ConfigMap..."
           
@@ -165,7 +167,7 @@ jobs:
           echo "✅ ConfigMap applied"
 
       - name: Deploy Backend
-        working-directory: dx03
+        working-directory: app
         run: |
           echo "🚀 Deploying backend..."
           
@@ -181,7 +183,7 @@ jobs:
           echo "✅ Backend deployed successfully!"
 
       - name: Deploy Frontend
-        working-directory: dx03
+        working-directory: app
         run: |
           echo "🚀 Deploying frontend..."
           
