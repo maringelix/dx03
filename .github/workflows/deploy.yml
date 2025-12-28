@@ -37,8 +37,6 @@ jobs:
     steps:
       - name: Checkout dx03
         uses: actions/checkout@v4
-        with:
-          path: dx03
 
       - name: Checkout tx03 (for Terraform outputs)
         uses: actions/checkout@v4
@@ -72,7 +70,7 @@ jobs:
             --project ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Build and Push Frontend
-        working-directory: dx03/client
+        working-directory: client
         run: |
           echo "🏗️ Building frontend image..."
           
@@ -89,7 +87,7 @@ jobs:
           echo "✅ Frontend image pushed successfully!"
 
       - name: Build and Push Backend
-        working-directory: dx03/server
+        working-directory: server
         run: |
           echo "🏗️ Building backend image..."
           
