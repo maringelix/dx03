@@ -181,7 +181,11 @@ jobs:
           sed "s|ENVIRONMENT_PLACEHOLDER|dev|g" k8s/backend-service.yaml | kubectl apply -f -
           
           echo "⏳ Waiting for backend rollout..."
-          kubectl rollout status deployment/dx03-backend -n ${{ env.NAMESPACE }} --timeout=5m
+          echo "📊 Checking pod status..."
+          kubectl get pods -n ${{ env.NAMESPACE }}
+          kubectl describe deployment dx03-backend -n ${{ env.NAMESPACE }} | tail -20
+          
+          kubectl rollout status deployment/dx03-backend -n ${{ env.NAMESPACE }} --timeout=10m
           
           echo "✅ Backend deployed successfully!"
 
