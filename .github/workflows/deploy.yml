@@ -219,7 +219,7 @@ jobs:
             namespace: ${{ env.NAMESPACE }}
             annotations:
               kubernetes.io/ingress.class: "gce"
-              networking.gke.io/managed-certificates: "dx03-cert"
+              cloud.google.com/neg: '{"ingress": true}'
           spec:
             rules:
             - http:
@@ -230,7 +230,7 @@ jobs:
                     service:
                       name: dx03-backend
                       port:
-                        number: 3000
+                        number: 80
                 - path: /
                   pathType: Prefix
                   backend:
