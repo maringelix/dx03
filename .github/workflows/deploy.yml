@@ -72,11 +72,9 @@ jobs:
             --project ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Build and Push Frontend
-        working-directory: dx03
+        working-directory: dx03/client
         run: |
           echo "🏗️ Building frontend image..."
-          
-          cd client
           
           docker build \
             --build-arg VITE_API_URL=/api \
@@ -91,11 +89,9 @@ jobs:
           echo "✅ Frontend image pushed successfully!"
 
       - name: Build and Push Backend
-        working-directory: dx03
+        working-directory: dx03/server
         run: |
           echo "🏗️ Building backend image..."
-          
-          cd server
           
           docker build \
             -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/backend:${{ github.sha }} \
