@@ -244,24 +244,32 @@ jobs:
 
       - name: Get Application URLs
         id: urls
+        continue-on-error: true  # Don't fail if LB not ready yet
         run: |
           echo "🔍 Getting application URLs..."
           
-          # Wait for ingress to get IP
-          echo "⏳ Waiting for Load Balancer IP..."
-          for i in {1..30}; do
+          # Wait up to 10 minutes for ingress to get IP (GCP LB provisioning can take time)
+          echo "⏳ Waiting for Load Balancer IP (this can take 5-15 minutes)..."
+          for i in {1..60}; do
             INGRESS_IP=$(kubectl get ingress dx03-ingress -n ${{ env.NAMESPACE }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
             if [ -n "$INGRESS_IP" ]; then
               echo "ingress_ip=$INGRESS_IP" >> $GITHUB_OUTPUT
               echo "🌐 Ingress IP: $INGRESS_IP"
               break
             fi
-            echo "Waiting... ($i/30)"
+            
+            # Show progress every 30 seconds
+            if [ $((i % 3)) -eq 0 ]; then
+              echo "⏳ Still waiting... ($i/60 = $((i * 10 / 60)) minutes elapsed)"
+            fi
             sleep 10
           done
           
           if [ -z "$INGRESS_IP" ]; then
-            echo "⚠️  Ingress IP not yet assigned (will be available shortly)"
+            echo "⚠️  Ingress IP not assigned within 10 minutes"
+            echo "ℹ️  This is normal for first deployment - Load Balancer is still provisioning"
+            echo "💡 Check status in a few minutes with:"
+            echo "   kubectl get ingress dx03-ingress -n ${{ env.NAMESPACE }}"
           fi
 
       - name: Deployment Summary
@@ -285,11 +293,24 @@ jobs:
           echo "📦 Pods:"
           kubectl get pods -n ${{ env.NAMESPACE }}
           echo ""
+          echo "🔧 Ingress:"
+          kubectl get ingress -n ${{ env.NAMESPACE }}
+          echo ""
           if [ -n "${{ steps.urls.outputs.ingress_ip }}" ]; then
-            echo "🌐 Application URL: http://${{ steps.urls.outputs.ingress_ip }}"
+            echo "✅ Application is ready!"
+            echo "🌐 Frontend URL: http://${{ steps.urls.outputs.ingress_ip }}"
+            echo "🌐 Backend API: http://${{ steps.urls.outputs.ingress_ip }}/api"
+            echo "🏥 Health Check: http://${{ steps.urls.outputs.ingress_ip }}/api/health/live"
           else
-            echo "⏳ Load Balancer provisioning... Check in a few minutes:"
+            echo "⏳ Load Balancer still provisioning (takes 5-15 minutes)"
+            echo ""
+            echo "📋 To check status:"
             echo "   kubectl get ingress dx03-ingress -n ${{ env.NAMESPACE }}"
+            echo ""
+            echo "📋 Once IP is assigned, access:"
+            echo "   Frontend: http://<INGRESS_IP>"
+            echo "   Backend:  http://<INGRESS_IP>/api"
+            echo "   Health:   http://<INGRESS_IP>/api/health/live"
           fi
 
   notify-success:
