@@ -231,6 +231,13 @@ jobs:
                       name: dx03-backend
                       port:
                         number: 80
+                - path: /health
+                  pathType: Prefix
+                  backend:
+                    service:
+                      name: dx03-backend
+                      port:
+                        number: 80
                 - path: /
                   pathType: Prefix
                   backend:
