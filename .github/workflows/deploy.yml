@@ -194,9 +194,11 @@ jobs:
           kubectl get events -n ${{ env.NAMESPACE }} --sort-by='.lastTimestamp' | tail -20
           kubectl describe pods -n ${{ env.NAMESPACE }} -l app=dx03-backend | grep -A 10 "Events:"
           
-          # Show pod logs if crashing
+          # Wait for pods to start and show logs if crashing
+          echo "📋 Waiting 30s for pods to start..."
+          sleep 30
           echo "📋 Checking pod logs..."
-          kubectl logs -n ${{ env.NAMESPACE }} -l app=dx03-backend --tail=50 --all-containers=true || echo "No logs available yet"
+          kubectl logs -n ${{ env.NAMESPACE }} -l app=dx03-backend --tail=100 --all-containers=true --ignore-errors=true || echo "No logs available yet"
           
           kubectl rollout status deployment/dx03-backend -n ${{ env.NAMESPACE }} --timeout=10m
           

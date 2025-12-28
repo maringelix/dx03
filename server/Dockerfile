@@ -17,8 +17,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy from builder
-COPY --from=builder /app .
+# Copy from builder and set ownership
+COPY --from=builder --chown=node:node /app .
 
 # Expose port
 EXPOSE 3000
