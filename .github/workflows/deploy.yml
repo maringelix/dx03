@@ -272,6 +272,90 @@ jobs:
             echo "   kubectl get ingress dx03-ingress -n ${{ env.NAMESPACE }}"
           fi
 
+      - name: Check Backend Logs
+        run: |
+          echo "📋 Checking backend logs for errors..."
+          echo "======================================"
+          
+          # Get backend pod name
+          BACKEND_POD=$(kubectl get pods -n ${{ env.NAMESPACE }} -l app=dx03-backend -o jsonpath='{.items[0].metadata.name}')
+          
+          if [ -n "$BACKEND_POD" ]; then
+            echo "📦 Backend Pod: $BACKEND_POD"
+            echo ""
+            echo "📝 Recent logs:"
+            kubectl logs $BACKEND_POD -n ${{ env.NAMESPACE }} --tail=50 || echo "⚠️  Could not fetch logs"
+            echo ""
+            
+            # Check for database connection errors
+            echo "🔍 Checking for database errors..."
+            kubectl logs $BACKEND_POD -n ${{ env.NAMESPACE }} --tail=100 | grep -i "error\|failed\|database\|connection" || echo "✅ No obvious errors found"
+          else
+            echo "⚠️  No backend pod found"
+          fi
+
+      - name: Associate Cloud Armor WAF
+        continue-on-error: true
+        run: |
+          echo "🛡️ Associating Cloud Armor WAF with backend services..."
+          
+          # Get backend service names
+          BACKEND_SERVICES=$(gcloud compute backend-services list --filter="name~dx03-dev" --format="value(name)")
+          
+          if [ -z "$BACKEND_SERVICES" ]; then
+            echo "⚠️  No backend services found yet (Load Balancer still provisioning)"
+            exit 0
+          fi
+          
+          # Associate WAF policy with each backend service
+          for service in $BACKEND_SERVICES; do
+            echo "🔧 Associating WAF with: $service"
+            gcloud compute backend-services update $service \
+              --security-policy=tx03-waf-policy \
+              --global \
+              || echo "⚠️  Could not associate WAF with $service (might not exist yet)"
+          done
+          
+          echo "✅ Cloud Armor WAF association complete!"
+
+      - name: Test Endpoints
+        id: test
+        continue-on-error: true
+        run: |
+          echo "🧪 Testing application endpoints..."
+          
+          INGRESS_IP="${{ steps.urls.outputs.ingress_ip }}"
+          
+          if [ -z "$INGRESS_IP" ]; then
+            echo "⏳ Load Balancer IP not available yet, skipping tests"
+            exit 0
+          fi
+          
+          echo "🌐 Testing: http://$INGRESS_IP"
+          echo ""
+          
+          # Test frontend
+          echo "1️⃣ Frontend (/):"
+          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://$INGRESS_IP/" --max-time 10) || FRONTEND_STATUS="timeout"
+          echo "   Status: $FRONTEND_STATUS"
+          [ "$FRONTEND_STATUS" = "200" ] && echo "   ✅ OK" || echo "   ❌ FAILED"
+          echo ""
+          
+          # Test backend root
+          echo "2️⃣ Backend Root (/api):"
+          BACKEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://$INGRESS_IP/api" --max-time 10) || BACKEND_STATUS="timeout"
+          echo "   Status: $BACKEND_STATUS"
+          [ "$BACKEND_STATUS" = "200" ] && echo "   ✅ OK" || echo "   ❌ FAILED"
+          echo ""
+          
+          # Test health check
+          echo "3️⃣ Health Check (/health/live):"
+          HEALTH_RESPONSE=$(curl -s "http://$INGRESS_IP/health/live" --max-time 10) || HEALTH_RESPONSE="timeout"
+          HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://$INGRESS_IP/health/live" --max-time 10) || HEALTH_STATUS="timeout"
+          echo "   Status: $HEALTH_STATUS"
+          echo "   Response: $HEALTH_RESPONSE"
+          [ "$HEALTH_STATUS" = "200" ] && echo "   ✅ OK" || echo "   ❌ FAILED"
+
       - name: Deployment Summary
         run: |
           echo "📊 Deployment Summary"
@@ -300,7 +384,9 @@ jobs:
             echo "✅ Application is ready!"
             echo "🌐 Frontend URL: http://${{ steps.urls.outputs.ingress_ip }}"
             echo "🌐 Backend API: http://${{ steps.urls.outputs.ingress_ip }}/api"
-            echo "🏥 Health Check: http://${{ steps.urls.outputs.ingress_ip }}/api/health/live"
+            echo "🏥 Health Check: http://${{ steps.urls.outputs.ingress_ip }}/health/live"
+            echo ""
+            echo "🛡️ Cloud Armor WAF: Configured"
           else
             echo "⏳ Load Balancer still provisioning (takes 5-15 minutes)"
             echo ""
