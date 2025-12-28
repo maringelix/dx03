@@ -148,12 +148,12 @@ jobs:
           # Delete existing secret if exists
           kubectl delete secret dx03-db-secret -n ${{ env.NAMESPACE }} --ignore-not-found=true
           
-          # Create new secret
+          # Create new secret (matching backend-deployment.yaml keys)
           kubectl create secret generic dx03-db-secret \
             --from-literal=host=${{ steps.db_creds.outputs.db_host }} \
             --from-literal=port=5432 \
-            --from-literal=name=dx03 \
-            --from-literal=user=dx03 \
+            --from-literal=database=dx03 \
+            --from-literal=username=dx03 \
             --from-literal=password=${{ steps.db_creds.outputs.db_password }} \
             --namespace=${{ env.NAMESPACE }}
           
