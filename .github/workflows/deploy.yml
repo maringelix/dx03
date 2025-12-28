@@ -73,6 +73,9 @@ jobs:
         working-directory: client
         run: |
           echo "🏗️ Building frontend image..."
+          echo "📂 Current directory: $(pwd)"
+          echo "📄 Files:"
+          ls -la
           
           docker build \
             --build-arg VITE_API_URL=/api \
