@@ -109,6 +109,7 @@ jobs:
         id: db_creds
         run: |
           echo "🔍 Using database credentials from secrets..."
+          echo "::add-mask::${{ secrets.DB_PASSWORD }}"
           echo "db_password=${{ secrets.DB_PASSWORD }}" >> $GITHUB_OUTPUT
           echo "db_host=${{ secrets.DB_HOST }}" >> $GITHUB_OUTPUT
           echo "✅ Database credentials retrieved"
@@ -135,6 +136,10 @@ jobs:
             --from-literal=username=dx03 \
             --from-literal=password=${{ steps.db_creds.outputs.db_password }} \
             --namespace=${{ env.NAMESPACE }}
+          
+          # Debug: Verify secret keys (values are hidden)
+          echo "🔍 Verifying secret keys..."
+          kubectl get secret dx03-db-secret -n ${{ env.NAMESPACE }} -o jsonpath='{.data}' | jq 'keys'
           
           echo "✅ Database secret created"
 
