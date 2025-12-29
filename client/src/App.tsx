@@ -35,7 +35,7 @@ function App() {
     try {
       setLoading(true)
       setError(null)
-      const response = await fetch(`${API_URL}/health/ready`)
+      const response = await fetch(`${API_URL}/health`)
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`)
