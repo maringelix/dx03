@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 
-// Use relative path to work with Ingress routing (/ -> frontend, /api -> backend)
-// In production, the browser will use the same domain (Load Balancer IP)
-const API_URL = import.meta.env.VITE_API_URL || ''
+// Use window.location.origin to work in any environment
+// In GKE, this will be the Load Balancer IP (http://34.54.86.122)
+// Ingress routes: / -> frontend, /api -> backend, /health -> backend
+const API_URL = window.location.origin
 
 interface HealthStatus {
   status: string

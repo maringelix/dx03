@@ -73,7 +73,6 @@ jobs:
           ls -la
           
           docker build \
-            --build-arg VITE_API_URL="" \
             --no-cache \
             -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/frontend:${{ github.sha }} \
             -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REGISTRY }}/frontend:latest \
