@@ -229,9 +229,10 @@ jobs:
         run: |
           echo "🌐 Applying Ingress with static IP..."
           
-          # Get static IP name from Terraform output
+          # Get static IP name and SSL certificate from Terraform output
           cd tx03/terraform/environments/dev
           STATIC_IP_NAME=$(terraform output -raw loadbalancer_static_ip_name 2>/dev/null || echo "")
+          SSL_CERT_NAME=$(terraform output -raw loadbalancer_ssl_certificate_name 2>/dev/null || echo "")
           cd -
           
           # Build annotations based on available resources
@@ -244,6 +245,14 @@ jobs:
               kubernetes.io/ingress.global-static-ip-name: "'"$STATIC_IP_NAME"'"'
           else
             echo "⚠️ No static IP found, Load Balancer will use ephemeral IP"
+          fi
+          
+          if [ -n "$SSL_CERT_NAME" ]; then
+            echo "🔐 Using SSL certificate: $SSL_CERT_NAME"
+            ANNOTATIONS="$ANNOTATIONS"'
+              networking.gke.io/managed-certificates: "'"$SSL_CERT_NAME"'"'
+          else
+            echo "⚠️ No SSL certificate found, will use HTTP only"
           fi
           
           # Create Ingress with dynamic annotations
