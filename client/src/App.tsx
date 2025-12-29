@@ -53,8 +53,6 @@ function App() {
 
   useEffect(() => {
     fetchHealth()
-    const interval = setInterval(fetchHealth, 10000) // Refresh every 10s
-    return () => clearInterval(interval)
   }, [])
 
   const formatUptime = (seconds: number) => {

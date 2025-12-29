@@ -4,7 +4,7 @@ metadata:
   name: dx03-config
   namespace: dx03-ENVIRONMENT_PLACEHOLDER
 data:
-  NODE_ENV: "production"
+  NODE_ENV: "dev"
   PORT: "3000"
   DB_PORT: "5432"
   CORS_ORIGIN: "https://dx03.example.com"
