@@ -208,9 +208,26 @@ jobs:
 
       - name: Apply Ingress
         run: |
-          echo "🌐 Applying Ingress..."
+          echo "🌐 Applying Ingress with static IP..."
           
-          # Create Ingress
+          # Get static IP name from Terraform output
+          cd ../tx03/terraform/environments/dev
+          STATIC_IP_NAME=$(terraform output -raw loadbalancer_static_ip_name 2>/dev/null || echo "")
+          cd -
+          
+          # Build annotations based on available resources
+          ANNOTATIONS='kubernetes.io/ingress.class: "gce"
+              cloud.google.com/neg: '\''{"ingress": true}'\'''
+          
+          if [ -n "$STATIC_IP_NAME" ]; then
+            echo "✅ Using static IP: $STATIC_IP_NAME"
+            ANNOTATIONS="$ANNOTATIONS"'
+              kubernetes.io/ingress.global-static-ip-name: "'"$STATIC_IP_NAME"'"'
+          else
+            echo "⚠️ No static IP found, Load Balancer will use ephemeral IP"
+          fi
+          
+          # Create Ingress with dynamic annotations
           cat <<EOF | kubectl apply -f -
           apiVersion: networking.k8s.io/v1
           kind: Ingress
@@ -218,8 +235,7 @@ jobs:
             name: dx03-ingress
             namespace: ${{ env.NAMESPACE }}
             annotations:
-              kubernetes.io/ingress.class: "gce"
-              cloud.google.com/neg: '{"ingress": true}'
+              $ANNOTATIONS
           spec:
             rules:
             - http:
