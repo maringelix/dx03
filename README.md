@@ -61,7 +61,13 @@ A aplicação está rodando em **produção** no Google Cloud Platform:
 - **🌍 Frontend:** http://dx03.ddns.net
 - **⚡ Backend API:** http://dx03.ddns.net/api
 - **💚 Health Check:** http://dx03.ddns.net/health
-- **🔒 HTTPS:** https://dx03.ddns.net (certificado provisionando)
+- **🔒 HTTPS:** https://dx03.ddns.net ✅ (certificado ativo!)
+
+### 📸 Aplicação em Produção
+
+![DX03 Application Screenshot](./dx03.jpg)
+
+*Screenshot da aplicação dx03 rodando em produção no GKE com HTTPS ativo*
 
 **Infraestrutura:**
 - ☁️ Google Kubernetes Engine (GKE Autopilot)
@@ -69,7 +75,7 @@ A aplicação está rodando em **produção** no Google Cloud Platform:
 - 🔒 Cloud Armor WAF (proteção contra OWASP Top 10)
 - ⚖️ HTTP(S) Load Balancer (IP estático: 34.36.62.164)
 - 🌐 Domínio: dx03.ddns.net
-- 🔐 SSL/TLS: Google-managed Certificate (provisioning)
+- 🔐 SSL/TLS: Google-managed Certificate ✅ ATIVO
 - 📦 Artifact Registry
 
 **Métricas em Tempo Real:**
