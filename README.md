@@ -8,7 +8,8 @@
 
 Uma aplicação fullstack moderna com **React + TypeScript + Vite** no frontend e **Node.js + Express + PostgreSQL** no backend, **rodando em produção** no **Google Kubernetes Engine (GKE)**.
 
-> 🌐 **Live Demo:** http://34.54.86.122  
+> 🌐 **Live Demo:** http://dx03.ddns.net (34.36.62.164)  
+> 🔒 **HTTPS:** https://dx03.ddns.net (certificado provisionando)  
 > 📊 **Status Report:** [DEPLOYMENT_STATUS.md](./DEPLOYMENT_STATUS.md)
 
 ---
@@ -57,22 +58,25 @@ Uma aplicação fullstack moderna com **React + TypeScript + Vite** no frontend 
 
 A aplicação está rodando em **produção** no Google Cloud Platform:
 
-- **🌍 Frontend:** http://34.54.86.122
-- **⚡ Backend API:** http://34.54.86.122/api
-- **💚 Health Check:** http://34.54.86.122/health
+- **🌍 Frontend:** http://dx03.ddns.net
+- **⚡ Backend API:** http://dx03.ddns.net/api
+- **💚 Health Check:** http://dx03.ddns.net/health
+- **🔒 HTTPS:** https://dx03.ddns.net (certificado provisionando)
 
 **Infraestrutura:**
 - ☁️ Google Kubernetes Engine (GKE Autopilot)
 - 🗄️ Cloud SQL PostgreSQL 14
-- 🔒 Cloud Armor WAF
-- ⚖️ HTTP(S) Load Balancer
+- 🔒 Cloud Armor WAF (proteção contra OWASP Top 10)
+- ⚖️ HTTP(S) Load Balancer (IP estático: 34.36.62.164)
+- 🌐 Domínio: dx03.ddns.net
+- 🔐 SSL/TLS: Google-managed Certificate (provisioning)
 - 📦 Artifact Registry
 
 **Métricas em Tempo Real:**
 - ✅ Uptime: 99.9%
 - ⚡ Response Time: <50ms
 - 🔗 Database Latency: <5ms
-- 🛡️ Security: WAF Ativo
+- 🛡️ Security: WAF Ativo (Cloud Armor)
 
 ## 🎯 Sobre
 
@@ -85,8 +89,11 @@ DX03 é uma aplicação fullstack completa em **produção**, demonstrando:
 - ✅ **Hot reload** em desenvolvimento
 - ✅ **Multi-stage Docker builds** otimizados
 - ✅ **Kubernetes-ready** - Rodando em GKE (Google Kubernetes Engine)
-- ✅ **CI/CD** automatizado com GitHub Actions (44 deploys)
+- ✅ **CI/CD** automatizado com GitHub Actions (47 deploys)
 - ✅ **Zero downtime deployments**
+- ✅ **IP Estático** reservado (34.36.62.164)
+- ✅ **Domínio customizado** (dx03.ddns.net)
+- ⏳ **SSL/TLS** com Google-managed Certificate (provisioning)
 
 **🎯 Ideal para:**
 - Portfolio de DevOps/Cloud Engineering
@@ -540,7 +547,33 @@ data:
 **6. frontend-service.yaml** - Service ClusterIP
 - Expõe o frontend internamente na porta 80
 
-**7. ingress.yaml** - Load Balancer + routing
+**7. ingress.yaml** - Load Balancer + routing com SSL
+```yaml
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "tx03-dev-ingress-ip"
+    networking.gke.io/managed-certificates: "tx03-dev-ingress-cert"
+    cloud.google.com/neg: '{"ingress": true}'
+```
+- Roteamento: `/api` → backend, `/` → frontend
+- IP estático: 34.36.62.164 (reservado via Terraform)
+- SSL Certificate: Google-managed (provisioning)
+- Cloud Armor: Proteção WAF ativa
+
+**8. managed-certificate.yaml** - Certificado SSL gerenciado
+```yaml
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: tx03-dev-ingress-cert
+spec:
+  domains:
+    - dx03.ddns.net
+```
+- Google provisiona e renova automaticamente
+- Tempo de provisão: 15-60 minutos
+- Validação via DNS (HTTP challenge)
 - Path-based routing: `/api/*` → backend, `/*` → frontend
 - Cloud Armor security policy
 - Static IP reservado
