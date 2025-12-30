@@ -1,0 +1,8 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: tx03-dev-ingress-cert
+  namespace: ENVIRONMENT_PLACEHOLDER
+spec:
+  domains:
+    - dx03.ddns.net

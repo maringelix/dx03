@@ -225,6 +225,14 @@ jobs:
           echo "🔧 Initializing Terraform..."
           terraform init
 
+      - name: Apply ManagedCertificate
+        working-directory: app
+        run: |
+          echo "🔐 Applying ManagedCertificate for SSL..."
+          sed "s|ENVIRONMENT_PLACEHOLDER|${{ env.NAMESPACE }}|g" k8s/managed-certificate.yaml | kubectl apply -f -
+          
+          echo "✅ ManagedCertificate applied!"
+
       - name: Apply Ingress
         run: |
           echo "🌐 Applying Ingress with static IP..."
