@@ -7,6 +7,7 @@ const config = require('./config');
 const { pool, initializeDatabase } = require('./database');
 const healthRoutes = require('./routes/health');
 const apiRoutes = require('./routes/api');
+const { register, metricsMiddleware, updateDatabasePoolMetrics } = require('./metrics');
 
 const app = express();
 
@@ -17,6 +18,22 @@ app.use(cors({ origin: config.cors.origin }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('combined'));
+
+// Prometheus metrics middleware (before routes)
+app.use(metricsMiddleware);
+
+// Prometheus metrics endpoint
+app.get('/metrics', async (req, res) => {
+  try {
+    // Update database pool metrics before returning
+    updateDatabasePoolMetrics(pool);
+    
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (error) {
+    res.status(500).end(error);
+  }
+});
 
 // Routes
 app.use('/health', healthRoutes);
@@ -32,6 +49,7 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       api: '/api',
+      metrics: '/metrics',
     },
   });
 });
