@@ -237,7 +237,7 @@ jobs:
         working-directory: app
         run: |
           echo "🔒 Applying FrontendConfig for HTTPS redirect..."
-          sed "s|ENVIRONMENT_PLACEHOLDER|${{ env.NAMESPACE }}|g" k8s/frontend-config.yaml | kubectl apply -f -
+          sed "s|NAMESPACE_PLACEHOLDER|${{ env.NAMESPACE }}|g" k8s/frontend-config.yaml | kubectl apply -f -
           
           echo "✅ FrontendConfig applied - HTTP will redirect to HTTPS!"
 
