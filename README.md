@@ -9,7 +9,7 @@
 Uma aplicação fullstack moderna com **React + TypeScript + Vite** no frontend e **Node.js + Express + PostgreSQL** no backend, **rodando em produção** no **Google Kubernetes Engine (GKE)**.
 
 > 🌐 **Live Demo:** http://dx03.ddns.net (34.36.62.164)  
-> 🔒 **HTTPS:** https://dx03.ddns.net (certificado provisionando)  
+> 🔒 **HTTPS:** https://dx03.ddns.net (✅ certificado ativo! Auto-redirect HTTP → HTTPS)  
 > 📊 **Status Report:** [DEPLOYMENT_STATUS.md](./DEPLOYMENT_STATUS.md)
 
 ---
@@ -76,26 +76,32 @@ A aplicação está rodando em **produção** no Google Cloud Platform:
 - ⚖️ HTTP(S) Load Balancer (IP estático: 34.36.62.164)
 - 🌐 Domínio: dx03.ddns.net
 - 🔐 SSL/TLS: Google-managed Certificate ✅ ATIVO
+- � HTTPS Redirect: HTTP → HTTPS (301) ✅ ATIVO
+- 📊 Observability: Prometheus + Grafana + Alertmanager
+- 🔔 Slack Alerts: Notificações em tempo real
 - 📦 Artifact Registry
 
 **Métricas em Tempo Real:**
 - ✅ Uptime: 99.9%
-- ⚡ Response Time: <50ms
+- ⚡ Response Time: <50ms (P95)
 - 🔗 Database Latency: <5ms
 - 🛡️ Security: WAF Ativo (Cloud Armor)
+- 📈 Monitoring: 8 custom metrics + Node.js defaults
 
 ## 🎯 Sobre
 
 DX03 é uma aplicação fullstack completa em **produção**, demonstrando:
 - ✅ Frontend React com **TypeScript + Vite** para desenvolvimento ultra-rápido
 - ✅ Backend RESTful com **Express + PostgreSQL**
+- ✅ **HTTPS forçado** - Todo tráfego HTTP redireciona para HTTPS (301)
+- ✅ **Slack Alerts** - Notificações em tempo real de alertas via Prometheus
 - ✅ **Health check endpoints** para Kubernetes liveness/readiness probes
 - ✅ **Métricas e observabilidade** em tempo real
 - ✅ **CORS e segurança** configurados (Helmet, Cloud Armor WAF)
 - ✅ **Hot reload** em desenvolvimento
 - ✅ **Multi-stage Docker builds** otimizados
 - ✅ **Kubernetes-ready** - Rodando em GKE (Google Kubernetes Engine)
-- ✅ **CI/CD** automatizado com GitHub Actions (47 deploys)
+- ✅ **CI/CD** automatizado com GitHub Actions (49+ deploys)
 - ✅ **Zero downtime deployments**
 - ✅ **IP Estático** reservado (34.36.62.164)
 - ✅ **Domínio customizado** (dx03.ddns.net)
