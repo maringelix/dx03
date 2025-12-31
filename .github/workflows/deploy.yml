@@ -233,6 +233,14 @@ jobs:
           
           echo "✅ ManagedCertificate applied!"
 
+      - name: Apply FrontendConfig (HTTPS Redirect)
+        working-directory: app
+        run: |
+          echo "🔒 Applying FrontendConfig for HTTPS redirect..."
+          sed "s|ENVIRONMENT_PLACEHOLDER|${{ env.NAMESPACE }}|g" k8s/frontend-config.yaml | kubectl apply -f -
+          
+          echo "✅ FrontendConfig applied - HTTP will redirect to HTTPS!"
+
       - name: Apply Ingress
         run: |
           echo "🌐 Applying Ingress with static IP..."

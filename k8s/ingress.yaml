@@ -9,6 +9,8 @@ metadata:
     networking.gke.io/managed-certificates: "dx03-cert"
     # Cloud Armor security policy
     cloud.google.com/armor-config: '{"dx03-security-policy": "global"}'
+    # HTTPS redirect
+    networking.gke.io/v1beta1.FrontendConfig: "dx03-frontend-config"
   labels:
     app: dx03
 spec:
