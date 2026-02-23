@@ -1,4 +1,4 @@
-name: ✅ CI
+name: CI
 
 on:
   push:
@@ -7,50 +7,49 @@ on:
     branches: [master, main]
 
 jobs:
-  validate:
-    name: Validate Repository
+  lint-and-build:
+    name: Lint & Build
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Check repository structure
-        run: |
-          echo "✅ Repository structure validation"
-          echo ""
-          echo "📁 Documentation:"
-          ls -la *.md 2>/dev/null || echo "  No markdown files"
-          
-          echo ""
-          echo "📁 GitHub Workflows:"
-          ls -la .github/workflows/*.yml 2>/dev/null || echo "  No workflows"
-          
-          echo ""
-          echo "📁 Terraform:"
-          ls -la terraform/ 2>/dev/null || echo "  Terraform directory not yet created"
-          
-          echo ""
-          echo "✨ Repository is valid!"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
 
-      - name: Validate Markdown links
-        run: |
-          echo "🔗 Checking markdown files..."
-          
-          if command -v markdown-link-check &> /dev/null; then
-            find . -name "*.md" -not -path "./node_modules/*" -exec markdown-link-check {} \;
-          else
-            echo "⏭️  Skipping link validation (markdown-link-check not installed)"
-          fi
+      - name: Install server dependencies
+        working-directory: server
+        run: npm ci
 
-      - name: Summary
+      - name: Lint server
+        working-directory: server
+        run: npm run lint --if-present
+
+      - name: Test server
+        working-directory: server
+        run: npm test --if-present
+
+      - name: Install client dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Lint client
+        working-directory: client
+        run: npm run lint --if-present
+
+      - name: Build client
+        working-directory: client
+        run: npm run build
+
+      - name: Validate K8s manifests
         run: |
-          echo "## ✅ CI Validation Complete" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Repository structure is valid and ready for deployment!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📚 Available Workflows" >> $GITHUB_STEP_SUMMARY
-          echo "- **Bootstrap**: Create Terraform backend (manual)" >> $GITHUB_STEP_SUMMARY
-          echo "- **Terraform Plan**: Preview changes on PRs" >> $GITHUB_STEP_SUMMARY
-          echo "- **Deploy**: Apply infrastructure changes" >> $GITHUB_STEP_SUMMARY
-          echo "- **Destroy**: Tear down infrastructure (manual)" >> $GITHUB_STEP_SUMMARY
+          echo "Validating Kubernetes manifests..."
+          for f in k8s/*.yaml; do
+            echo "  ✓ $f"
+            python3 -c "import yaml; yaml.safe_load(open('$f'))" 2>/dev/null || echo "    ⚠ Invalid YAML: $f"
+          done

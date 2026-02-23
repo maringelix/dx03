@@ -37,12 +37,6 @@ router.get('/', async (req, res) => {
       responseTime: `${Date.now() - startTime}ms`,
     };
 
-    // Log health check to database
-    await pool.query(
-      'INSERT INTO health_checks (status, details) VALUES ($1, $2)',
-      ['healthy', JSON.stringify(health)]
-    );
-
     res.json(health);
   } catch (error) {
     console.error('Health check failed:', error);

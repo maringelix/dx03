@@ -8,7 +8,7 @@ module.exports = {
     port: parseInt(process.env.DB_PORT, 10) || 5432,
     name: process.env.DB_NAME || 'dx03',
     user: process.env.DB_USER || 'admin',
-    password: process.env.DB_PASSWORD || 'admin123',
+    password: process.env.DB_PASSWORD,
   },
   cors: {
     origin: process.env.CORS_ORIGIN || 'http://localhost:5173',

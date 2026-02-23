@@ -17,10 +17,18 @@ spec:
         app: dx03-frontend
         version: v1
     spec:
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 101
       containers:
       - name: frontend
         image: IMAGE_PLACEHOLDER
         imagePullPolicy: Always
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
         ports:
         - containerPort: 80
           name: http
