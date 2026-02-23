@@ -29,12 +29,12 @@ jobs:
     
     steps:
       - name: Checkout dx03
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           path: app
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
@@ -42,7 +42,7 @@ jobs:
           export_environment_variables: true
 
       - name: Setup Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@e427ad8a34f8676edf47cf7d7925499adf3eb74f # v2
 
       - name: Configure Docker for Artifact Registry
         run: |
@@ -94,7 +94,7 @@ jobs:
           echo "✅ Backend image pushed successfully!"
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
           terraform_version: 1.9.0
 
@@ -200,14 +200,14 @@ jobs:
           echo "✅ Frontend deployed successfully!"
 
       - name: Checkout tx03 for Terraform outputs
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           repository: maringelix/tx03
           path: tx03
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Terraform for tx03
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
           terraform_version: 1.9.0
           terraform_wrapper: false
