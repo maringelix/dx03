@@ -1,0 +1,90 @@
+# Default-deny + minimal allow-list for the dx03 backend and frontend.
+#
+# Both Pods sit in the same namespace (dx03-<env>) and only need:
+#   - Frontend: ingress from the ingress controller on 8080.
+#   - Backend:  ingress from the frontend Pod on 3000 (also allow the same
+#               from the ingress controller in case of direct API exposure).
+#   - Both: DNS egress to kube-system + outbound HTTPS for upstream APIs.
+#   - Backend: TCP egress on 5432 for PostgreSQL (Cloud SQL via private VPC).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dx03-default-deny
+  namespace: dx03-ENVIRONMENT_PLACEHOLDER
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress", "Egress"]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dx03-frontend-ingress
+  namespace: dx03-ENVIRONMENT_PLACEHOLDER
+spec:
+  podSelector:
+    matchLabels:
+      app: dx03-frontend
+  policyTypes: ["Ingress"]
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dx03-backend-ingress
+  namespace: dx03-ENVIRONMENT_PLACEHOLDER
+spec:
+  podSelector:
+    matchLabels:
+      app: dx03-backend
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: dx03-frontend
+      ports:
+        - protocol: TCP
+          port: 3000
+    - ports:
+        - protocol: TCP
+          port: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dx03-allow-egress
+  namespace: dx03-ENVIRONMENT_PLACEHOLDER
+spec:
+  podSelector: {}
+  policyTypes: ["Egress"]
+  egress:
+    # DNS (kube-dns in kube-system).
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # PostgreSQL (Cloud SQL private IP) and outbound HTTPS for OAuth/API calls.
+    - ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 443
+    # Allow frontend -> backend on 3000 within namespace.
+    - to:
+        - podSelector:
+            matchLabels:
+              app: dx03-backend
+      ports:
+        - protocol: TCP
+          port: 3000

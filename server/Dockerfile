@@ -1,5 +1,5 @@
 # Build stage -- needs devDependencies to compile TypeScript
-FROM node:20.11.0-alpine3.19 AS builder
+FROM node:20.11.0-alpine3.19@sha256:2f46fd49c767554c089a5eb219115313b72748d8f62f5eccb58ef52bc36db4ad AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY src ./src
 RUN npm run build && npm prune --omit=dev
 
 # Production stage
-FROM node:20.11.0-alpine3.19
+FROM node:20.11.0-alpine3.19@sha256:2f46fd49c767554c089a5eb219115313b72748d8f62f5eccb58ef52bc36db4ad
 
 WORKDIR /app
 
