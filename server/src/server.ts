@@ -21,6 +21,17 @@ export function createApp(): express.Express {
   app.use(morgan('combined'));
   app.use(metricsMiddleware);
 
+  // 30s per-request hard timeout.
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    req.setTimeout(30_000, () => {
+      if (!res.headersSent) {
+        res.status(503).json({ error: 'Request timeout' });
+      }
+      req.destroy();
+    });
+    next();
+  });
+
   app.get('/metrics', requireMetricsToken, async (_req: Request, res: Response) => {
     try {
       updateDatabasePoolMetrics(pool);
