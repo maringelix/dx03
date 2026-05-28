@@ -1,0 +1,25 @@
+# PodDisruptionBudgets ensure at least one replica of each tier stays up during
+# voluntary disruptions (node drain, kubectl drain, cluster autoscaler eviction,
+# rolling node-pool upgrades). The Deployments declare replicas: 2, so
+# minAvailable: 1 still allows a rolling update to proceed.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: dx03-backend-pdb
+  namespace: dx03-ENVIRONMENT_PLACEHOLDER
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: dx03-backend
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: dx03-frontend-pdb
+  namespace: dx03-ENVIRONMENT_PLACEHOLDER
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: dx03-frontend

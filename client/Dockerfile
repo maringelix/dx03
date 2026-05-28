@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20.11.0-alpine3.19 AS builder
+FROM node:20.11.0-alpine3.19@sha256:2f46fd49c767554c089a5eb219115313b72748d8f62f5eccb58ef52bc36db4ad AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ ENV VITE_API_URL=${VITE_API_URL}
 RUN npm run build
 
 # Production stage -- unprivileged nginx (runs as user nginx on port 8080, no root)
-FROM nginxinc/nginx-unprivileged:1.27.0-alpine
+FROM nginxinc/nginx-unprivileged:1.27.3-alpine@sha256:9e7238f579a54582263a960d1b0094b4a3ecce641342eda3f8e2ff82b1703d2b
 
 # Copy built assets from builder
 COPY --from=builder /app/dist /usr/share/nginx/html

@@ -17,9 +17,15 @@ spec:
         app: dx03-frontend
         version: v1
     spec:
+      serviceAccountName: dx03-frontend
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
         fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: frontend
         image: IMAGE_PLACEHOLDER
@@ -55,3 +61,17 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 2
           failureThreshold: 3
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: nginx-cache
+          mountPath: /var/cache/nginx
+        - name: nginx-run
+          mountPath: /var/run
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: nginx-cache
+        emptyDir: {}
+      - name: nginx-run
+        emptyDir: {}
