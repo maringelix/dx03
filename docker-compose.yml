@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: dx03
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin123
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     ports:
       - "5432:5432"
     volumes:
@@ -32,8 +32,9 @@ services:
       DB_PORT: 5432
       DB_NAME: dx03
       DB_USER: admin
-      DB_PASSWORD: admin123
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       CORS_ORIGIN: http://localhost:5173
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
     ports:
       - "3000:3000"
     depends_on:

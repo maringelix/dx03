@@ -73,6 +73,11 @@ spec:
             configMapKeyRef:
               name: dx03-config
               key: CORS_ORIGIN
+        - name: METRICS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: dx03-metrics-secret
+              key: token
         resources:
           requests:
             cpu: 100m
@@ -92,6 +97,9 @@ spec:
           httpGet:
             path: /health/ready
             port: 3000
+            httpHeaders:
+            - name: Authorization
+              value: Bearer METRICS_TOKEN_PLACEHOLDER
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 3

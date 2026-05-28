@@ -1,19 +1,19 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20.11.0-alpine3.19 AS builder
 
 WORKDIR /app
 
 # Copy package files
-COPY package.json ./
+COPY package*.json ./
 
 # Install dependencies
-RUN npm install --production
+RUN npm ci --omit=dev
 
 # Copy application code
 COPY . .
 
 # Production stage
-FROM node:20-alpine
+FROM node:20.11.0-alpine3.19
 
 WORKDIR /app
 

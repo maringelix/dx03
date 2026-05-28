@@ -8,6 +8,7 @@ const { pool, initializeDatabase } = require('./database');
 const healthRoutes = require('./routes/health');
 const apiRoutes = require('./routes/api');
 const { register, metricsMiddleware, updateDatabasePoolMetrics } = require('./metrics');
+const { requireMetricsToken } = require('./middleware/auth');
 
 const app = express();
 
@@ -15,23 +16,21 @@ const app = express();
 app.use(helmet());
 app.use(compression());
 app.use(cors({ origin: config.cors.origin }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(morgan('combined'));
 
 // Prometheus metrics middleware (before routes)
 app.use(metricsMiddleware);
 
-// Prometheus metrics endpoint
-app.get('/metrics', async (req, res) => {
+// Prometheus metrics endpoint (protected by Bearer METRICS_TOKEN)
+app.get('/metrics', requireMetricsToken, async (req, res) => {
   try {
-    // Update database pool metrics before returning
     updateDatabasePoolMetrics(pool);
-    
     res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
   } catch (error) {
-    res.status(500).end(error);
+    res.status(500).end();
   }
 });
 
@@ -39,18 +38,11 @@ app.get('/metrics', async (req, res) => {
 app.use('/health', healthRoutes);
 app.use('/api', apiRoutes);
 
-// Root endpoint
+// Root endpoint -- minimal, no env/version leak
 app.get('/', (req, res) => {
   res.json({
     name: 'dx03-backend',
-    version: '1.0.0',
     status: 'running',
-    environment: config.env,
-    endpoints: {
-      health: '/health',
-      api: '/api',
-      metrics: '/metrics',
-    },
   });
 });
 
@@ -62,12 +54,11 @@ app.use((req, res) => {
   });
 });
 
-// Error handler
+// Error handler -- never leak err.message/stack to client
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error',
-    ...(config.env === 'development' && { stack: err.stack }),
+    error: 'Internal Server Error',
   });
 });
 
@@ -81,8 +72,6 @@ async function startServer() {
     app.listen(config.port, () => {
       console.log(`🚀 Server running on port ${config.port}`);
       console.log(`📝 Environment: ${config.env}`);
-      console.log(`🗄️  Database: ${config.db.host}:${config.db.port}/${config.db.name}`);
-      console.log(`🌐 CORS origin: ${config.cors.origin}`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
