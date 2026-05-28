@@ -20,7 +20,7 @@ ENV VITE_API_URL=${VITE_API_URL}
 RUN npm run build
 
 # Production stage -- unprivileged nginx (runs as user nginx on port 8080, no root)
-FROM nginxinc/nginx-unprivileged:1.27.3-alpine@sha256:9e7238f579a54582263a960d1b0094b4a3ecce641342eda3f8e2ff82b1703d2b
+FROM nginxinc/nginx-unprivileged:1.31.1-alpine@sha256:8122337ed6c475bb486bc9340da453d4599f225e6b920ff0d92ca2267486b9b5
 
 # Copy built assets from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
