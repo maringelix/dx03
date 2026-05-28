@@ -30,7 +30,7 @@ jobs:
     
     steps:
       - name: Checkout dx03
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           path: app
 
@@ -237,7 +237,7 @@ jobs:
           echo "✅ Frontend deployed successfully!"
 
       - name: Checkout tx03 for Terraform outputs
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: maringelix/tx03
           path: tx03
