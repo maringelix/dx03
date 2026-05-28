@@ -1,34 +1,32 @@
-const express = require('express');
-const router = express.Router();
-const { pool } = require('../database');
-const { requireMetricsToken } = require('../middleware/auth');
+import { Router, type Request, type Response } from 'express';
+import { pool } from '../database';
+import { requireMetricsToken } from '../middleware/auth';
 
-// Public liveness probe -- minimal payload, no env/db info
-router.get('/', (req, res) => {
+const router = Router();
+
+router.get('/', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'alive' });
 });
 
-router.get('/live', (req, res) => {
+router.get('/live', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'alive' });
 });
 
-// Readiness probe -- protected because it exposes DB state.
-// Kubernetes probes should pass Authorization: Bearer ${METRICS_TOKEN}
-// via httpGet.httpHeaders.
-router.get('/ready', requireMetricsToken, async (req, res) => {
+router.get('/ready', requireMetricsToken, async (_req: Request, res: Response) => {
   const startTime = Date.now();
   try {
     const dbStart = Date.now();
     await pool.query('SELECT 1');
     const dbLatency = Date.now() - dbStart;
 
-    const { rows } = await pool.query(`
-      SELECT 
-        COUNT(*) as total_connections,
-        COUNT(*) FILTER (WHERE state = 'active') as active_connections
-      FROM pg_stat_activity
-      WHERE datname = $1
-    `, [process.env.DB_NAME]);
+    const { rows } = await pool.query(
+      `SELECT
+         COUNT(*) AS total_connections,
+         COUNT(*) FILTER (WHERE state = 'active') AS active_connections
+       FROM pg_stat_activity
+       WHERE datname = $1`,
+      [process.env.DB_NAME],
+    );
 
     res.json({
       status: 'ready',
@@ -46,6 +44,7 @@ router.get('/ready', requireMetricsToken, async (req, res) => {
       responseTime: `${Date.now() - startTime}ms`,
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Readiness check failed:', error);
     res.status(503).json({
       status: 'not ready',
@@ -54,4 +53,4 @@ router.get('/ready', requireMetricsToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
