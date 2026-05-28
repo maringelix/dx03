@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { pool } from '../database';
 import { requireMetricsToken } from '../middleware/auth';
+import logger from '../utils/logger';
 
 const router = Router();
 
@@ -44,8 +45,7 @@ router.get('/ready', requireMetricsToken, async (_req: Request, res: Response) =
       responseTime: `${Date.now() - startTime}ms`,
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Readiness check failed:', error);
+    logger.error({ err: error, component: 'health' }, 'Readiness check failed');
     res.status(503).json({
       status: 'not ready',
       timestamp: new Date().toISOString(),
