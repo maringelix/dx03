@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../database');
+const { requireMetricsToken } = require('../middleware/auth');
 
-// Get API metrics
-router.get('/metrics', async (req, res) => {
+// API metrics (protected -- recon-prone aggregate)
+router.get('/metrics', requireMetricsToken, async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT 
@@ -24,12 +25,12 @@ router.get('/metrics', async (req, res) => {
       period: '1 hour',
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'internal' });
   }
 });
 
-// Get health check history
-router.get('/health-history', async (req, res) => {
+// Health check history (protected)
+router.get('/health-history', requireMetricsToken, async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT timestamp, status, details
@@ -42,7 +43,7 @@ router.get('/health-history', async (req, res) => {
       history: rows,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'internal' });
   }
 });
 
@@ -50,14 +51,6 @@ router.get('/health-history', async (req, res) => {
 router.get('/test', (req, res) => {
   res.json({
     message: 'API is working!',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// Echo endpoint for testing
-router.post('/echo', (req, res) => {
-  res.json({
-    received: req.body,
     timestamp: new Date().toISOString(),
   });
 });

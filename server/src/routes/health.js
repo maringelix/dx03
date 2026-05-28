@@ -1,17 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../database');
+const { requireMetricsToken } = require('../middleware/auth');
 
-router.get('/', async (req, res) => {
+// Public liveness probe -- minimal payload, no env/db info
+router.get('/', (req, res) => {
+  res.status(200).json({ status: 'alive' });
+});
+
+router.get('/live', (req, res) => {
+  res.status(200).json({ status: 'alive' });
+});
+
+// Readiness probe -- protected because it exposes DB state.
+// Kubernetes probes should pass Authorization: Bearer ${METRICS_TOKEN}
+// via httpGet.httpHeaders.
+router.get('/ready', requireMetricsToken, async (req, res) => {
   const startTime = Date.now();
-  
   try {
-    // Check database connection
     const dbStart = Date.now();
-    await pool.query('SELECT NOW()');
+    await pool.query('SELECT 1');
     const dbLatency = Date.now() - dbStart;
 
-    // Get database stats
     const { rows } = await pool.query(`
       SELECT 
         COUNT(*) as total_connections,
@@ -20,11 +30,10 @@ router.get('/', async (req, res) => {
       WHERE datname = $1
     `, [process.env.DB_NAME]);
 
-    const health = {
-      status: 'healthy',
+    res.json({
+      status: 'ready',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      environment: process.env.NODE_ENV,
       database: {
         status: 'connected',
         latency: `${dbLatency}ms`,
@@ -35,36 +44,14 @@ router.get('/', async (req, res) => {
         total: `${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB`,
       },
       responseTime: `${Date.now() - startTime}ms`,
-    };
-
-    res.json(health);
+    });
   } catch (error) {
-    console.error('Health check failed:', error);
-    
-    const unhealthy = {
-      status: 'unhealthy',
+    console.error('Readiness check failed:', error);
+    res.status(503).json({
+      status: 'not ready',
       timestamp: new Date().toISOString(),
-      error: error.message,
-      database: {
-        status: 'disconnected',
-      },
-    };
-
-    res.status(503).json(unhealthy);
+    });
   }
-});
-
-router.get('/ready', async (req, res) => {
-  try {
-    await pool.query('SELECT 1');
-    res.status(200).json({ status: 'ready' });
-  } catch (error) {
-    res.status(503).json({ status: 'not ready', error: error.message });
-  }
-});
-
-router.get('/live', (req, res) => {
-  res.status(200).json({ status: 'alive' });
 });
 
 module.exports = router;
