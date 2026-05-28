@@ -1,34 +1,30 @@
-# Build stage
+# Build stage -- needs devDependencies to compile TypeScript
 FROM node:20.11.0-alpine3.19 AS builder
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json ./
+COPY tsconfig.json ./
 
-# Install dependencies
-RUN npm ci --omit=dev
+RUN npm ci
 
-# Copy application code
-COPY . .
+COPY src ./src
+RUN npm run build && npm prune --omit=dev
 
 # Production stage
 FROM node:20.11.0-alpine3.19
 
 WORKDIR /app
 
-# Copy from builder and set ownership
-COPY --from=builder --chown=node:node /app .
+COPY --from=builder --chown=node:node /app/package.json /app/package-lock.json ./
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/dist ./dist
 
-# Expose port
 EXPOSE 3000
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/health/live', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-# Run as non-root user
 USER node
 
-# Start application
-CMD ["node", "src/server.js"]
+CMD ["node", "dist/server.js"]

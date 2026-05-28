@@ -73,3 +73,7 @@ ENV/
 Thumbs.db
 .DS_Store
 desktop.ini
+
+dist/
+coverage/
+

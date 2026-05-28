@@ -8,8 +8,23 @@ on:
 
 jobs:
   lint-and-build:
-    name: Lint & Build
+    name: Lint, Typecheck, Test & Build
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: dx03_test
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: ${{ secrets.CI_DB_PASSWORD || 'ci-test-password-not-real' }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U admin -d dx03_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -30,9 +45,26 @@ jobs:
         working-directory: server
         run: npm run lint --if-present
 
-      - name: Test server
+      - name: Typecheck server
         working-directory: server
-        run: npm test --if-present
+        run: npm run typecheck
+
+      - name: Test server (with coverage)
+        working-directory: server
+        env:
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_PORT: '5432'
+          DB_NAME: dx03_test
+          DB_USER: admin
+          DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD || 'ci-test-password-not-real' }}
+          CORS_ORIGIN: http://localhost:5173
+          METRICS_TOKEN: ci-test-metrics-token-1234567890abcdef
+        run: npm run test:coverage
+
+      - name: Build server (TypeScript)
+        working-directory: server
+        run: npm run build
 
       - name: Install client dependencies
         working-directory: client
