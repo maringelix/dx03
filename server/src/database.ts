@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import config from './config';
+import logger from './utils/logger';
 
 export const pool = new Pool({
   host: config.db.host,
@@ -13,13 +14,11 @@ export const pool = new Pool({
 });
 
 pool.on('connect', () => {
-  // eslint-disable-next-line no-console
-  console.log('Database connected');
+  logger.info({ component: 'db' }, 'Database connected');
 });
 
 pool.on('error', (err: Error) => {
-  // eslint-disable-next-line no-console
-  console.error('Unexpected database error:', err);
+  logger.fatal({ err, component: 'db' }, 'Unexpected database error');
   process.exit(-1);
 });
 

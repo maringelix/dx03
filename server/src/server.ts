@@ -9,16 +9,23 @@ import healthRoutes from './routes/health';
 import apiRoutes from './routes/api';
 import { register, metricsMiddleware, updateDatabasePoolMetrics } from './metrics';
 import { requireMetricsToken } from './middleware/auth';
+import { correlationId } from './middleware/correlationId';
+import logger from './utils/logger';
 
 export function createApp(): express.Express {
   const app = express();
 
+  app.use(correlationId);
   app.use(helmet());
   app.use(compression());
   app.use(cors({ origin: config.cors.origin }));
   app.use(express.json({ limit: '10kb' }));
   app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-  app.use(morgan('combined'));
+  app.use(
+    morgan('combined', {
+      stream: { write: (msg) => logger.info({ component: 'http' }, msg.trim()) },
+    }),
+  );
   app.use(metricsMiddleware);
 
   // 30s per-request hard timeout.
@@ -57,9 +64,8 @@ export function createApp(): express.Express {
   });
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-    // eslint-disable-next-line no-console
-    console.error('Error:', err);
+  app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+    logger.error({ err, reqId: req.id, method: req.method, url: req.url }, 'Request error');
     res.status(500).json({ error: 'Internal Server Error' });
   });
 
@@ -71,14 +77,10 @@ async function startServer(): Promise<void> {
     await initializeDatabase();
     const app = createApp();
     app.listen(config.port, () => {
-      // eslint-disable-next-line no-console
-      console.log(`Server running on port ${config.port}`);
-      // eslint-disable-next-line no-console
-      console.log(`Environment: ${config.env}`);
+      logger.info({ port: config.port, env: config.env }, 'Server running');
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Failed to start server:', error);
+    logger.fatal({ err: error }, 'Failed to start server');
     process.exit(1);
   }
 }
