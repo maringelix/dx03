@@ -41,6 +41,11 @@ jobs:
         working-directory: server
         run: npm ci
 
+      - name: npm audit server (moderate, prod only, informational)
+        continue-on-error: true
+        working-directory: server
+        run: npm audit --omit=dev --audit-level=moderate
+
       - name: Lint server
         working-directory: server
         run: npm run lint --if-present
@@ -69,6 +74,11 @@ jobs:
       - name: Install client dependencies
         working-directory: client
         run: npm ci
+
+      - name: npm audit client (moderate, prod only, informational)
+        continue-on-error: true
+        working-directory: client
+        run: npm audit --omit=dev --audit-level=moderate
 
       - name: Lint client
         working-directory: client
